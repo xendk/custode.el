@@ -34,9 +34,9 @@
   ;; Kill the "Custode finished" message that compilation-handle-exit outputs.
   (setq-local inhibit-message t)
   ;; Add our finish function to handle things when the process ends.
-  (setq-local compilation-finish-functions #'custode-compilation-finish-function))
+  (setq-local compilation-finish-functions #'custode--compilation-finish-function))
 
-(defun custode-compilation-finish-function (buffer outstr)
+(defun custode--compilation-finish-function (buffer outstr)
   "Finish handler for custode-task-mode.
 
 BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
