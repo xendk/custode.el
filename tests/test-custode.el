@@ -9,7 +9,7 @@
      (wait-for-custode-tasks)
 
      ;; There should be a buffer for the task.
-     (expect (get-buffer "*custode test*")
+     (expect (get-buffer "*custode-task test*")
              :not :to-be nil)
      ;; But still only one window.
      (expect (length (window-list))
@@ -21,7 +21,7 @@
      (custode-start "false")
      (wait-for-custode-tasks)
 
-     (expect (get-buffer "*custode test*")
+     (expect (get-buffer "*custode-task test*")
              :not :to-be nil)
 
      ;; It should have popped up a window.

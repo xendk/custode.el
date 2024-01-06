@@ -29,7 +29,7 @@
 (require 'compile)
 (require 'project)
 
-(define-compilation-mode custode-mode "Custode"
+(define-compilation-mode custode-task-mode "Custode"
   "Major mode for custode tasks."
   ;; Kill the "Custode finished" message that compilation-handle-exit outputs.
   (setq-local inhibit-message t)
@@ -37,7 +37,7 @@
   (setq-local compilation-finish-functions #'custode-compilation-finish-function))
 
 (defun custode-compilation-finish-function (buffer outstr)
-  "Finish handler for custode-mode.
+  "Finish handler for custode-task-mode.
 
 BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
   (unless (string-match "finished" outstr)
@@ -51,14 +51,14 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
          (buffer-name-func #'(lambda (name-of-mode)
                                (concat "*" (downcase name-of-mode) " test*"))))
     ;; todo: deal with buffer existence.
-    (unless (get-buffer (funcall buffer-name-func "custode-mode"))
+    (unless (get-buffer (funcall buffer-name-func "custode-task-mode"))
       (let* (;; Don't show the buffer per default.
              (display-buffer-overriding-action '(display-buffer-no-window))
              (compilation-buffer-name-function buffer-name-func)
              (buffer (progn
                        ;; `compile' attempts to save buffers, so we'll
                        ;; go directly to `compilation-start'.
-                       (compilation-start command 'custode-mode)))
+                       (compilation-start command 'custode-task-mode)))
              (comp-proc (get-buffer-process buffer)))
         ;; Tell emacs that it's OK to kill the process without asking.
         (set-process-query-on-exit-flag comp-proc nil)))))
