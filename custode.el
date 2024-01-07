@@ -91,7 +91,9 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
   (if (string-match "finished" outstr)
       ;; Remove the buffer window if succesful.
       (when (get-buffer-window buffer t)
-        (delete-window (get-buffer-window buffer)))
+        ;; Unless it's the only window in the frame.
+        (unless (< (length (window-list nil (get-buffer-window buffer))) 2)
+          (delete-window (get-buffer-window buffer))))
     (unless (get-buffer-window buffer t)
       ;; Display buffer if task failed.
       (display-buffer buffer))))
