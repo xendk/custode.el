@@ -147,10 +147,9 @@ Returns a list of (task-name task-command)."
       (let* (;; Don't show the buffer per default.
              (display-buffer-overriding-action '(display-buffer-no-window))
              (compilation-buffer-name-function buffer-name-func)
-             (buffer (progn
-                       ;; `compile' attempts to save buffers, so we'll
-                       ;; go directly to `compilation-start'.
-                       (compilation-start command 'custode-task-mode)))
+             ;; `compile' attempts to save buffers, so we'll
+             ;; go directly to `compilation-start'.
+             (buffer (compilation-start command 'custode-task-mode))
              (comp-proc (get-buffer-process buffer)))
         ;; Tell emacs that it's OK to kill the process without asking.
         (set-process-query-on-exit-flag comp-proc nil)))))
