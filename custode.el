@@ -174,7 +174,5 @@ Returns a list of (task-name task-command)."
         ;; Tell emacs that it's OK to kill the process without asking.
         (set-process-query-on-exit-flag comp-proc nil)))))
 
-;; (custode-start "sleep 1 && echo \"done\" && false")
-
 (provide 'custode)
 ;;; custode.el ends here
