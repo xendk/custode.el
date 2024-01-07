@@ -42,6 +42,37 @@ The format is:
 )
 ")
 
+(defvar custode-lighter '(:eval (when (and custode-mode
+                                           (custode--get-current-project-tasks)) "👁"))
+  "Mode line lighter for Custode.
+
+The value of this variable is a mode line template as in
+`mode-line-format'.")
+
+(put 'custode-lighter 'risky-local-variable t)
+
+(define-minor-mode custode-mode
+  "Minor mode for running tasks on file save."
+  :global t
+  :lighter custode-lighter
+  :group 'custode
+  :init-value nil
+  (if custode-mode
+      (add-hook 'after-save-hook 'custode-after-save-hook t t)
+    (remove-hook 'after-save-hook 'custode-after-save-hook t)))
+
+(defun custode-after-save-hook ()
+  (let ((current-project (project-current)))
+    (when current-project
+      (let ((tasks (custode--get-active-tasks (project-root current-project)))
+            (default-directory (project-root (project-current t))))
+        (dolist (task tasks)
+          (message "task %s" (car task))
+          (message "command %s" (cdr task))
+          (custode--start (car task) (car (cdr task)))
+          )
+        ))))
+
 (define-compilation-mode custode-task-mode "Custode"
   "Major mode for custode tasks."
   ;; Kill the "Custode finished" message that compilation-handle-exit outputs.
@@ -65,6 +96,12 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
 
 PROJECT-ROOT is the path to the root of the project."
   (alist-get project-root custode--tasks nil nil 'equal))
+
+(defun custode--get-current-project-tasks ()
+  "Get tasks of current project."
+  (let ((current-project (project-current)))
+    (when current-project
+      (custode--get-tasks (project-root current-project)))))
 
 (defun custode-enable-task (project task-name)
   "Enable a task."
