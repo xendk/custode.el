@@ -28,7 +28,26 @@
      ;; It should have popped up a window.
      (expect (length (window-list))
              :to-equal
-             2))))
+             2)))
+
+  (it "removes window again on success"
+    (assess-with-preserved-buffer-list
+     (custode--start "task" "false")
+     (wait-for-custode-tasks)
+
+     (expect (get-buffer (concat "*custode-task " default-directory " task*"))
+             :not :to-be nil)
+
+     ;; It should have popped up a window.
+     (expect (length (window-list))
+             :to-equal
+             2)
+
+     (custode--start "task" "true")
+     (wait-for-custode-tasks)
+     (expect (length (window-list))
+             :to-equal
+             1))))
 
 (describe "task management"
   :var (simple-fixture)

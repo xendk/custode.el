@@ -53,7 +53,10 @@ The format is:
   "Finish handler for custode-task-mode.
 
 BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
-  (unless (string-match "finished" outstr)
+  (if (string-match "finished" outstr)
+      ;; Remove the buffer window if succesful.
+      (when (get-buffer-window buffer t)
+        (delete-window (get-buffer-window buffer)))
     ;; Display buffer if task failed.
     (display-buffer buffer)))
 
