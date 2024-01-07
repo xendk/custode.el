@@ -75,11 +75,7 @@ The value of this variable is a mode line template as in
       (let ((tasks (custode--get-active-tasks (project-root current-project)))
             (default-directory (project-root (project-current t))))
         (dolist (task tasks)
-          (message "task %s" (car task))
-          (message "command %s" (cdr task))
-          (custode--start (car task) (car (cdr task)))
-          )
-        ))))
+          (custode--start (car task) (car (cdr task))))))))
 
 (define-compilation-mode custode-task-mode "Custode"
   "Major mode for custode tasks."
