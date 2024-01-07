@@ -33,13 +33,21 @@
   "List of known tasks across all projects.
 
 The format is:
-(\"project_root\" . (
+((\"project_root\" . (
   \"task1\" (
-    (:active . t)
     (:task . \"eldev test\")
     )
   )
-)
+))
+")
+
+(defvar custode--task-states '()
+  "State storage for tasks.
+
+The format is:
+((\"project_root\\0task\" . (
+    (:active . t)
+)))
 ")
 
 (defvar custode-lighter '(:eval (when (and custode-mode
@@ -91,6 +99,16 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
     ;; Display buffer if task failed.
     (display-buffer buffer)))
 
+(defun custode--get-task-state (project-root task)
+  "Returns task state for PROJECT-ROOT and TASK.
+
+Creates the state if not found."
+  (let ((key (concat project-root "\0" task)))
+    (unless (assoc key custode--task-states)
+      (let ((val (copy-tree '((:active . nil)))))
+        (push (cons key (copy-tree '((:active . nil)))) custode--task-states)))
+    (cdr (assoc key custode--task-states))))
+
 (defun custode--get-tasks (project-root)
   "Get project tasks.
 
@@ -119,8 +137,9 @@ is the state."
   (let* ((project-tasks (or (custode--get-tasks project)
                             (error "Unknown project %s" project)))
          (task (or (alist-get task-name project-tasks nil nil 'equal)
-                   (error "Unknown task %s" task-name))))
-    (setf (alist-get :active task) state)))
+                   (error "Unknown task %s" task-name)))
+         (task-state (custode--get-task-state project task-name)))
+    (setf (alist-get :active task-state) state)))
 
 (defun custode--get-active-tasks (project)
   "Get active tasks for PROJECT.
@@ -129,10 +148,10 @@ Returns a list of (task-name task-command)."
   (let ((project-tasks (alist-get project custode--tasks nil nil 'equal))
         (active-tasks (list)))
     (if project-tasks
-        (dolist (task-name (map-keys project-tasks))
-          (let ((task (alist-get task-name project-tasks)))
-            (when (alist-get :active task)
-              (push (list task-name (alist-get :task task)) active-tasks)))))
+        (mapcar (lambda (elem)
+                  (when (alist-get :active (custode--get-task-state project (car elem)))
+                    (push (list (car elem) (alist-get :task (cdr elem))) active-tasks))
+                  ) project-tasks))
     active-tasks))
 
 (defun custode--start (task command)
