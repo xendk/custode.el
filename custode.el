@@ -95,12 +95,13 @@ Returns a list of (task-name task-command)."
               (push (list task-name (alist-get :task task)) active-tasks)))))
     active-tasks))
 
-(defun custode-start (command)
-  "Work in progress."
+(defun custode--start (task command)
+  "Start TASK with COMMAND."
   (interactive)
   (let* (;; We need different buffers per project/task.
          (buffer-name-func #'(lambda (name-of-mode)
-                               (concat "*" (downcase name-of-mode) " test*"))))
+                               (concat "*" (downcase name-of-mode) " "
+                                       default-directory " " task "*"))))
     ;; todo: deal with buffer existence.
     (unless (get-buffer (funcall buffer-name-func "custode-task-mode"))
       (let* (;; Don't show the buffer per default.
