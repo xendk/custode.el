@@ -29,6 +29,19 @@
 (require 'compile)
 (require 'project)
 
+(defvar custode--tasks '()
+  "List of known tasks across all projects.
+
+The format is:
+(\"project_root\" . (
+  \"task1\" (
+    (:active . t)
+    (:task . \"eldev test\")
+    )
+  )
+)
+")
+
 (define-compilation-mode custode-task-mode "Custode"
   "Major mode for custode tasks."
   ;; Kill the "Custode finished" message that compilation-handle-exit outputs.
@@ -43,6 +56,38 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
   (unless (string-match "finished" outstr)
     ;; Display buffer if task failed.
     (display-buffer buffer)))
+
+(defun custode-enable-task (project task-name)
+  "Enable a task."
+  (custode--set-task-active project task-name t))
+
+(defun custode-disable-task (project task-name)
+  "Disable a task."
+  (custode--set-task-active project task-name nil))
+
+(defun custode--set-task-active (project task-name state)
+  "Set task `active' state.
+
+PROJECT is the project root, TASK-NAME is the task name and state
+is the state."
+  (let* ((project-tasks (or (alist-get project custode--tasks nil nil 'equal)
+                            (error "Unknown project %s" project)))
+         (task (or (alist-get task-name project-tasks nil nil 'equal)
+                   (error "Unknown task %s" task-name))))
+    (setf (alist-get :active task) state)))
+
+(defun custode--get-active-tasks (project)
+  "Get active tasks for PROJECT.
+
+Returns a list of (task-name task-command)."
+  (let ((project-tasks (alist-get project custode--tasks nil nil 'equal))
+        (active-tasks (list)))
+    (if project-tasks
+        (dolist (task-name (map-keys project-tasks))
+          (let ((task (alist-get task-name project-tasks)))
+            (when (alist-get :active task)
+              (push (list task-name (alist-get :task task)) active-tasks)))))
+    active-tasks))
 
 (defun custode-start (command)
   "Work in progress."

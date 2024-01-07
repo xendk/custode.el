@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (require 'buttercup)
 (require 'assess)
 (require 'custode)
@@ -28,3 +29,57 @@
      (expect (length (window-list))
              :to-equal
              2))))
+
+(describe "task management"
+  :var (simple-fixture)
+
+  (before-each
+    ;; Without copy-tree, all tests would work on the same list.
+    (setq simple-fixture (copy-tree
+                          '(("project" .
+                             (("task1" . ((:active . t)
+                                          (:task . "task one")))
+                              ("task2" . ((:active . nil)
+                                          (:task . "task two"))))))))
+    )
+
+  (describe "custode--get-active-tasks"
+    (it "returns active tasks"
+      (let ((custode--tasks simple-fixture))
+        (expect (custode--get-active-tasks "project")
+                :to-have-same-items-as
+                '(("task1" "task one")))
+        )))
+
+  (describe "custode-enable-task"
+    (it "enables inactive tasks"
+      (let ((custode--tasks simple-fixture))
+        (custode-enable-task "project" "task2")
+        (expect (custode--get-active-tasks "project")
+                :to-have-same-items-as
+                ;; The reversed order is a quirk of
+                '(("task2" "task two") ("task1" "task one")))))
+    (it "errors on unknown project"
+      (let ((custode--tasks simple-fixture))
+        (expect (custode-enable-task "projectX" "task1")
+                :to-throw)))
+    (it "errors on unknown task"
+      (let ((custode--tasks simple-fixture))
+        (expect (custode-enable-task "project" "taskx")
+                :to-throw))))
+
+  (describe "custode-disable-task"
+    (it "disables active tasks"
+      (let ((custode--tasks simple-fixture))
+        (custode-disable-task "project" "task1")
+        (expect (custode--get-active-tasks "project")
+                :to-have-same-items-as
+                '())))
+    (it "errors on unknown project"
+      (let ((custode--tasks simple-fixture))
+        (expect (custode-disable-task "projectX" "task1")
+                :to-throw)))
+    (it "errors on unknown task"
+      (let ((custode--tasks simple-fixture))
+        (expect (custode-disable-task "project" "taskx")
+                :to-throw)))))
