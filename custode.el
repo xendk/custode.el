@@ -165,6 +165,12 @@ Returns a list of (task-name task-command)."
       (let* (;; Don't show the buffer per default.
              (display-buffer-overriding-action '(display-buffer-no-window))
              (compilation-buffer-name-function buffer-name-func)
+             ;; Bind `compilation-in-progress' so compile will add our
+             ;; process here, so we can throw it away. If our process
+             ;; gets added to the real `compilation-in-progress',
+             ;; it'll trigger a "[Compiling]" lighter in the
+             ;; mode-line, ond we don't want that.
+             (compilation-in-progress nil)
              ;; Tell Emacs that it's OK to kill the process without asking.
              (compilation-always-kill t)
              )
