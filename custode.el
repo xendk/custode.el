@@ -57,6 +57,12 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
     ;; Display buffer if task failed.
     (display-buffer buffer)))
 
+(defun custode--get-tasks (project-root)
+  "Get project tasks.
+
+PROJECT-ROOT is the path to the root of the project."
+  (alist-get project-root custode--tasks nil nil 'equal))
+
 (defun custode-enable-task (project task-name)
   "Enable a task."
   (custode--set-task-active project task-name t))
@@ -70,7 +76,7 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
 
 PROJECT is the project root, TASK-NAME is the task name and state
 is the state."
-  (let* ((project-tasks (or (alist-get project custode--tasks nil nil 'equal)
+  (let* ((project-tasks (or (custode--get-tasks project)
                             (error "Unknown project %s" project)))
          (task (or (alist-get task-name project-tasks nil nil 'equal)
                    (error "Unknown task %s" task-name))))
