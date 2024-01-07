@@ -96,8 +96,9 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
       ;; Remove the buffer window if succesful.
       (when (get-buffer-window buffer t)
         (delete-window (get-buffer-window buffer)))
-    ;; Display buffer if task failed.
-    (display-buffer buffer)))
+    (unless (get-buffer-window buffer t)
+      ;; Display buffer if task failed.
+      (display-buffer buffer))))
 
 (defun custode--get-task-state (project-root task)
   "Returns task state for PROJECT-ROOT and TASK.
