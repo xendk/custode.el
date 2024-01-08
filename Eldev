@@ -5,4 +5,5 @@
 ;(eldev-use-package-archive 'nongnu-elpa)
 (eldev-use-package-archive 'melpa)
 
+(eldev-use-plugin 'undercover)
 (eldev-add-extra-dependencies 'test 'assess 'compat)
