@@ -3,7 +3,7 @@
 (require 'assess)
 (require 'custode)
 
-(describe "custode-start"
+(describe "custode--start"
   (it "runs task in background"
     (assess-with-preserved-buffer-list
      (custode--start "task" "true")
