@@ -70,10 +70,10 @@ The value of this variable is a mode line template as in
     (remove-hook 'after-save-hook 'custode-after-save-hook t)))
 
 (defun custode-after-save-hook ()
-  (let ((current-project (project-current)))
-    (when current-project
-      (let ((tasks (custode--get-active-tasks (project-root current-project)))
-            (default-directory (project-root (project-current t))))
+  (let ((project-root (custode-current-project-root)))
+    (when project-root
+      (let ((tasks (custode--get-active-tasks project-root))
+            (default-directory project-root))
         (dolist (task tasks)
           (custode--start (car task) (car (cdr task))))))))
 
@@ -98,6 +98,12 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
       ;; Display buffer if task failed.
       (display-buffer buffer))))
 
+(defun custode-current-project-root ()
+  "Get the project root of the current project, or nil if no project."
+  (let ((current-project (project-current)))
+    (when current-project
+      (project-root current-project))))
+
 (defun custode--get-task-state (project-root task)
   "Returns task state for PROJECT-ROOT and TASK.
 
@@ -116,9 +122,9 @@ PROJECT-ROOT is the path to the root of the project."
 
 (defun custode--get-current-project-tasks ()
   "Get tasks of current project."
-  (let ((current-project (project-current)))
+  (let ((project-root (custode-current-project-root)))
     (when current-project
-      (custode--get-tasks (project-root current-project)))))
+      (custode--get-tasks project-root))))
 
 (defun custode-enable-task (project-root task-name)
   "Enable a task."

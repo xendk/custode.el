@@ -49,6 +49,23 @@
              :to-equal
              1))))
 
+(describe "custode-current-project-root"
+  (describe "without a project"
+    (before-each
+      (spy-on 'project-current :and-return-value nil))
+    (it "returns nil"
+      (expect (custode-current-project-root)
+              :to-equal
+              nil)
+      ))
+  (describe "with a project"
+    (before-each
+      (spy-on 'project-current :and-return-value '(vc . "/some/path/")))
+    (it "returns the path"
+      (expect (custode-current-project-root)
+              :to-equal
+              "/some/path/"))))
+
 (describe "state management"
   (describe "custode--get-task-state"
     (it "creates new states"
