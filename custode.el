@@ -120,35 +120,35 @@ PROJECT-ROOT is the path to the root of the project."
     (when current-project
       (custode--get-tasks (project-root current-project)))))
 
-(defun custode-enable-task (project task-name)
+(defun custode-enable-task (project-root task-name)
   "Enable a task."
-  (custode--set-task-active project task-name t))
+  (custode--set-task-active project-root task-name t))
 
-(defun custode-disable-task (project task-name)
+(defun custode-disable-task (project-root task-name)
   "Disable a task."
-  (custode--set-task-active project task-name nil))
+  (custode--set-task-active project-root task-name nil))
 
-(defun custode--set-task-active (project task-name state)
+(defun custode--set-task-active (project-root task-name state)
   "Set task `active' state.
 
-PROJECT is the project root, TASK-NAME is the task name and state
+PROJECT-ROOT is the project root, TASK-NAME is the task name and state
 is the state."
-  (let* ((project-tasks (or (custode--get-tasks project)
-                            (error "Unknown project %s" project)))
+  (let* ((project-tasks (or (custode--get-tasks project-root)
+                            (error "Unknown project %s" project-root)))
          (task (or (alist-get task-name project-tasks nil nil 'equal)
                    (error "Unknown task %s" task-name)))
-         (task-state (custode--get-task-state project task-name)))
+         (task-state (custode--get-task-state project-root task-name)))
     (setf (alist-get :active task-state) state)))
 
-(defun custode--get-active-tasks (project)
-  "Get active tasks for PROJECT.
+(defun custode--get-active-tasks (project-root)
+  "Get active tasks for PROJECT-ROOT.
 
 Returns a list of (task-name task-command)."
-  (let ((project-tasks (alist-get project custode--tasks nil nil 'equal))
+  (let ((project-tasks (alist-get project-root custode--tasks nil nil 'equal))
         (active-tasks (list)))
     (if project-tasks
         (mapcar (lambda (elem)
-                  (when (alist-get :active (custode--get-task-state project (car elem)))
+                  (when (alist-get :active (custode--get-task-state project-root (car elem)))
                     (push (list (car elem) (alist-get :task (cdr elem))) active-tasks))
                   ) project-tasks))
     active-tasks))
