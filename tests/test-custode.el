@@ -185,19 +185,24 @@
 
   (describe "custode-disable-task"
     (it "disables active tasks"
+      (spy-on 'custode--current-project-root :and-return-value "project")
       (let ((custode--tasks simple-fixture)
             (custode--task-states simple-state-fixture))
-        (custode-disable-task "project" "task1")
+        (custode-disable-task "task1")
         (expect (custode--get-active-tasks "project")
                 :to-have-same-items-as
                 '())))
+
     (it "errors on unknown project"
+      (spy-on 'custode--current-project-root :and-return-value nil)
       (let ((custode--tasks simple-fixture)
             (custode--task-states simple-state-fixture))
-        (expect (custode-disable-task "projectX" "task1")
+        (expect (custode-disable-task "task1")
                 :to-throw)))
+
     (it "errors on unknown task"
+      (spy-on 'custode--current-project-root :and-return-value "project")
       (let ((custode--tasks simple-fixture)
             (custode--task-states simple-state-fixture))
-        (expect (custode-disable-task "project" "taskx")
+        (expect (custode-disable-task "taskx")
                 :to-throw)))))

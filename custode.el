@@ -72,6 +72,8 @@ TASK is the name of the task, COMMAND is the command to run."
     (let ((project (custode--get-project project-root)))
       (push (cons task (list (cons :task command))) (cdr project)))))
 
+;; TODO: These two could further limit the task list to
+;; enabled/disabled tasks.
 (defun custode-enable-task (task-name)
   "Enable a task."
   (interactive
@@ -82,9 +84,15 @@ TASK is the name of the task, COMMAND is the command to run."
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-active project-root task-name t)))
 
-(defun custode-disable-task (project-root task-name)
+(defun custode-disable-task (task-name)
   "Disable a task."
-  (custode--set-task-active project-root task-name nil))
+  (interactive
+   (list
+    (if (custode--current-project-root)
+        (completing-read "Task: " (custode--get-current-project-tasks) nil t)
+      (user-error "Not in a project"))))
+  (let ((project-root (custode--current-project-root)))
+    (custode--set-task-active project-root task-name nil)))
 
 (define-minor-mode custode-mode
   "Minor mode for running tasks on file save."
