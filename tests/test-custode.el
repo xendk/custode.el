@@ -132,17 +132,17 @@
                                 '(("project\0task1" . ((:active t)))
                                   ("project2\0task1" . ((:active t)))))))
 
-  (describe "custode--get-tasks"
+  (describe "custode--get-project"
     (it "returns the requested project"
       (let ((custode--tasks simple-fixture))
-        (expect (custode--get-tasks "project")
+        (expect (custode--get-project "project")
                 :to-equal
-                '(("task1" . ((:task . "task one")))
-                  ("task2" . ((:task . "task two")))))))
+                '("project" . (("task1" . ((:task . "task one")))
+                               ("task2" . ((:task . "task two"))))))))
 
     (it "return nil on unknown project"
       (let ((custode--tasks simple-fixture))
-        (expect (custode--get-tasks "banana")
+        (expect (custode--get-project "banana")
                 :to-be
                 nil))))
 

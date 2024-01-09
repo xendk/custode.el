@@ -133,17 +133,11 @@ Creates the state if not found."
 Returns (PROJECT-ROOT . TASKS) or nil if not found."
   (assoc project-root custode--tasks))
 
-(defun custode--get-tasks (project-root)
-  "Get project tasks.
-
-PROJECT-ROOT is the path to the root of the project."
-  (cdr (custode--get-project project-root)))
-
 (defun custode--get-current-project-tasks ()
   "Get tasks of current project."
   (let ((project-root (custode-current-project-root)))
-    (when current-project
-      (custode--get-tasks project-root))))
+    (when project-root
+      (cdr (custode--get-project project-root)))))
 
 (defun custode-enable-task (project-root task-name)
   "Enable a task."
@@ -158,7 +152,7 @@ PROJECT-ROOT is the path to the root of the project."
 
 PROJECT-ROOT is the project root, TASK-NAME is the task name and state
 is the state."
-  (let* ((project-tasks (or (custode--get-tasks project-root)
+  (let* ((project-tasks (or (cdr (custode--get-project project-root))
                             (error "Unknown project %s" project-root)))
          (task (or (alist-get task-name project-tasks nil nil 'equal)
                    (error "Unknown task %s" task-name)))
