@@ -139,9 +139,15 @@ Returns (PROJECT-ROOT . TASKS) or nil if not found."
     (when project-root
       (cdr (custode--get-project project-root)))))
 
-(defun custode-enable-task (project-root task-name)
+(defun custode-enable-task (task-name)
   "Enable a task."
-  (custode--set-task-active project-root task-name t))
+  (interactive
+   (list
+    (if (custode-current-project-root)
+        (completing-read "Task: " (custode--get-current-project-tasks) nil t)
+      (user-error "Not in a project"))))
+  (let ((project-root (custode-current-project-root)))
+    (custode--set-task-active project-root task-name t)))
 
 (defun custode-disable-task (project-root task-name)
   "Disable a task."

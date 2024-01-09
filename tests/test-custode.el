@@ -157,19 +157,27 @@
 
   (describe "custode-enable-task"
     (it "enables inactive tasks"
+      (spy-on 'custode-current-project-root :and-return-value "project")
+
       (let ((custode--tasks simple-fixture)
             (custode--task-states simple-state-fixture))
-        (custode-enable-task "project" "task2")
+        (custode-enable-task "task2")
         (expect (custode--get-active-tasks "project")
                 :to-have-same-items-as
                 ;; The reversed order is a quirk of
                 '(("task2" "task two") ("task1" "task one")))))
+
     (it "errors on unknown project"
+      (spy-on 'custode-current-project-root :and-return-value nil)
       (let ((custode--tasks simple-fixture)
             (custode--task-states simple-state-fixture))
-        (expect (custode-enable-task "projectX" "task1")
+        (expect (custode-enable-task "task1")
                 :to-throw)))
+
+    ;; Interactively, this is not possible, but it is when calling
+    ;; from lisp.
     (it "errors on unknown task"
+      (spy-on 'custode-current-project-root :and-return-value "project")
       (let ((custode--tasks simple-fixture)
             (custode--task-states simple-state-fixture))
         (expect (custode-enable-task "project" "taskx")
