@@ -91,7 +91,33 @@
                 '(("test\0task" . ((:active . t)))
                   ("test\0task2" . ((:active)))))))))
 
-(describe "task management"
+(describe "task management 1"
+  (before-each
+    (setq custode--tasks (list)))
+
+  (describe "custode-add-task"
+    (it "should add tasks to current project"
+      (spy-on 'custode-current-project-root :and-return-value "the-project/")
+      (custode-add-task "the-task" "the command")
+      (expect custode--tasks
+              :to-equal
+              '(("the-project/" .
+                 (("the-task" . ((:task . "the command")))))))
+
+      (custode-add-task "another-task" "another command")
+      (expect (cdr (assoc "the-project/" custode--tasks))
+              :to-have-same-items-as
+              '(("the-task" . ((:task . "the command")))
+                ("another-task" . ((:task . "another command"))))))
+
+    (it "errors when no project is active"
+      (spy-on 'custode-current-project-root :and-return-value nil)
+      (expect (custode-add-task "the-task" "the command")
+              :to-throw 'error))))
+
+;; TODO when we have an add-task, merge these into "task management
+;; 1", and let them add their fixture in their own before-each.
+(describe "task management 2"
   :var (simple-fixture simple-state-fixture)
 
   (before-each

@@ -104,6 +104,19 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
     (when current-project
       (project-root current-project))))
 
+(defun custode-add-task (task command)
+  "Add a task to the current project.
+
+TASK is the name of the task, COMMAND is the command to run."
+  (interactive "sTask: \nsCommand: ")
+  (let ((project-root (custode-current-project-root)))
+    (unless project-root
+      (user-error "Not in a project"))
+    (unless (custode--get-project project-root)
+      (push (cons project-root '()) custode--tasks))
+    (let ((project (custode--get-project project-root)))
+      (push (cons task (list (cons :task command))) (cdr project)))))
+
 (defun custode--get-task-state (project-root task)
   "Returns task state for PROJECT-ROOT and TASK.
 
@@ -114,11 +127,17 @@ Creates the state if not found."
         (push (cons key (copy-tree '((:active . nil)))) custode--task-states)))
     (cdr (assoc key custode--task-states))))
 
+(defun custode--get-project (project-root)
+  "Get PROJECT-ROOT project.
+
+Returns (PROJECT-ROOT . TASKS) or nil if not found."
+  (assoc project-root custode--tasks))
+
 (defun custode--get-tasks (project-root)
   "Get project tasks.
 
 PROJECT-ROOT is the path to the root of the project."
-  (alist-get project-root custode--tasks nil nil 'equal))
+  (cdr (custode--get-project project-root)))
 
 (defun custode--get-current-project-tasks ()
   "Get tasks of current project."
