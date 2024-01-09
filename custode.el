@@ -118,6 +118,9 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
       (display-buffer buffer))))
 
 (defun custode--after-save-hook ()
+  "After save hook for custode-mode.
+
+Triggers running active tasks if the file is in a project."
   (let ((project-root (custode--current-project-root)))
     (when project-root
       (let ((tasks (custode--get-active-tasks project-root))
