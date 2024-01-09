@@ -66,11 +66,11 @@ The value of this variable is a mode line template as in
   :group 'custode
   :init-value nil
   (if custode-mode
-      (add-hook 'after-save-hook 'custode-after-save-hook t t)
-    (remove-hook 'after-save-hook 'custode-after-save-hook t)))
+      (add-hook 'after-save-hook 'custode--after-save-hook t t)
+    (remove-hook 'after-save-hook 'custode--after-save-hook t)))
 
-(defun custode-after-save-hook ()
-  (let ((project-root (custode-current-project-root)))
+(defun custode--after-save-hook ()
+  (let ((project-root (custode--current-project-root)))
     (when project-root
       (let ((tasks (custode--get-active-tasks project-root))
             (default-directory project-root))
@@ -98,7 +98,7 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
       ;; Display buffer if task failed.
       (display-buffer buffer))))
 
-(defun custode-current-project-root ()
+(defun custode--current-project-root ()
   "Get the project root of the current project, or nil if no project."
   (let ((current-project (project-current)))
     (when current-project
@@ -109,7 +109,7 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
 
 TASK is the name of the task, COMMAND is the command to run."
   (interactive "sTask: \nsCommand: ")
-  (let ((project-root (custode-current-project-root)))
+  (let ((project-root (custode--current-project-root)))
     (unless project-root
       (user-error "Not in a project"))
     (unless (custode--get-project project-root)
@@ -135,7 +135,7 @@ Returns (PROJECT-ROOT . TASKS) or nil if not found."
 
 (defun custode--get-current-project-tasks ()
   "Get tasks of current project."
-  (let ((project-root (custode-current-project-root)))
+  (let ((project-root (custode--current-project-root)))
     (when project-root
       (cdr (custode--get-project project-root)))))
 
@@ -143,10 +143,10 @@ Returns (PROJECT-ROOT . TASKS) or nil if not found."
   "Enable a task."
   (interactive
    (list
-    (if (custode-current-project-root)
+    (if (custode--current-project-root)
         (completing-read "Task: " (custode--get-current-project-tasks) nil t)
       (user-error "Not in a project"))))
-  (let ((project-root (custode-current-project-root)))
+  (let ((project-root (custode--current-project-root)))
     (custode--set-task-active project-root task-name t)))
 
 (defun custode-disable-task (project-root task-name)

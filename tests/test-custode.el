@@ -49,12 +49,12 @@
              :to-equal
              1))))
 
-(describe "custode-current-project-root"
+(describe "custode--current-project-root"
   (describe "without a project"
     (before-each
       (spy-on 'project-current :and-return-value nil))
     (it "returns nil"
-      (expect (custode-current-project-root)
+      (expect (custode--current-project-root)
               :to-equal
               nil)
       ))
@@ -62,7 +62,7 @@
     (before-each
       (spy-on 'project-current :and-return-value '(vc . "/some/path/")))
     (it "returns the path"
-      (expect (custode-current-project-root)
+      (expect (custode--current-project-root)
               :to-equal
               "/some/path/"))))
 
@@ -97,7 +97,7 @@
 
   (describe "custode-add-task"
     (it "should add tasks to current project"
-      (spy-on 'custode-current-project-root :and-return-value "the-project/")
+      (spy-on 'custode--current-project-root :and-return-value "the-project/")
       (custode-add-task "the-task" "the command")
       (expect custode--tasks
               :to-equal
@@ -111,7 +111,7 @@
                 ("another-task" . ((:task . "another command"))))))
 
     (it "errors when no project is active"
-      (spy-on 'custode-current-project-root :and-return-value nil)
+      (spy-on 'custode--current-project-root :and-return-value nil)
       (expect (custode-add-task "the-task" "the command")
               :to-throw 'error))))
 
@@ -157,7 +157,7 @@
 
   (describe "custode-enable-task"
     (it "enables inactive tasks"
-      (spy-on 'custode-current-project-root :and-return-value "project")
+      (spy-on 'custode--current-project-root :and-return-value "project")
 
       (let ((custode--tasks simple-fixture)
             (custode--task-states simple-state-fixture))
@@ -168,7 +168,7 @@
                 '(("task2" "task two") ("task1" "task one")))))
 
     (it "errors on unknown project"
-      (spy-on 'custode-current-project-root :and-return-value nil)
+      (spy-on 'custode--current-project-root :and-return-value nil)
       (let ((custode--tasks simple-fixture)
             (custode--task-states simple-state-fixture))
         (expect (custode-enable-task "task1")
@@ -177,7 +177,7 @@
     ;; Interactively, this is not possible, but it is when calling
     ;; from lisp.
     (it "errors on unknown task"
-      (spy-on 'custode-current-project-root :and-return-value "project")
+      (spy-on 'custode--current-project-root :and-return-value "project")
       (let ((custode--tasks simple-fixture)
             (custode--task-states simple-state-fixture))
         (expect (custode-enable-task "project" "taskx")
