@@ -50,8 +50,24 @@ The format is:
 )))
 ")
 
-(defvar custode-lighter '(:eval (when (and custode-mode
-                                           (custode--get-current-project-tasks)) "👁"))
+(defvar custode--project-states '()
+  "State storage for tasks.
+
+The format is:
+((\"project_root\" . (
+    (:running . 0)
+)))
+")
+
+(defvar custode-lighter
+  '(:eval
+    (when (and custode-mode
+               (custode--get-current-project-tasks))
+      (let* ((project-state (custode--get-project-state (custode--current-project-root)))
+             (running (cdr (assoc :running (cdr project-state)))))
+        (if (and (numberp running) (> running 0))
+            (propertize "👁" 'face 'compilation-mode-line-run)
+          "👁"))))
   "Mode line lighter for Custode.
 
 The value of this variable is a mode line template as in
@@ -119,6 +135,11 @@ TASK is the name of the task, COMMAND is the command to run."
   "Finish handler for custode-task-mode.
 
 BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
+  (let ((project-state (custode--get-project-state (custode--current-project-root))))
+    (when (assoc :running (cdr project-state))
+      (setcdr (assoc :running (cdr project-state))
+              (1- (cdr (assoc :running (cdr project-state)))))))
+  (force-mode-line-update t)
   (if (string-match "finished" outstr)
       ;; Remove the buffer window if succesful.
       (when (get-buffer-window buffer t)
@@ -138,7 +159,7 @@ Triggers running active tasks if the file is in a project."
       (let ((tasks (custode--get-active-tasks project-root))
             (default-directory project-root))
         (dolist (task tasks)
-          (custode--start (car task) (car (cdr task))))))))
+          (custode--start project-root (car task) (car (cdr task))))))))
 
 (defun custode--current-project-root ()
   "Get the project root of the current project, or nil if no project."
@@ -155,6 +176,15 @@ Creates the state if not found."
       (let ((val (copy-tree '())))
         (push (cons key val) custode--task-states)))
     (assoc key custode--task-states)))
+
+(defun custode--get-project-state (project-root)
+  "Returns project state for PROJECT-ROOT.
+
+Creates the state if not found."
+  (unless (assoc project-root custode--project-states)
+    (let ((val (copy-tree '())))
+      (push (cons project-root val) custode--project-states)))
+  (assoc project-root custode--project-states))
 
 (defun custode--get-project (project-root)
   "Get PROJECT-ROOT project.
@@ -195,7 +225,7 @@ Returns a list of (task-name task-command)."
                   ) project-tasks))
     active-tasks))
 
-(defun custode--start (task command)
+(defun custode--start (project-root task command)
   "Start TASK with COMMAND."
   (interactive)
   (let* (;; We need different buffers per project/task.
@@ -214,11 +244,16 @@ Returns a list of (task-name task-command)."
              ;; mode-line, ond we don't want that.
              (compilation-in-progress nil)
              ;; Tell Emacs that it's OK to kill the process without asking.
-             (compilation-always-kill t)
-             )
+             (compilation-always-kill t))
         ;; `compile' attempts to save buffers, so we'll
         ;; go directly to `compilation-start'.
-        (compilation-start command 'custode-task-mode)))))
+        (compilation-start command 'custode-task-mode)
+        (let ((project-state (custode--get-project-state project-root)))
+          (if (assoc :running (cdr project-state))
+              (setcdr (assoc :running (cdr project-state))
+                      (1+ (cdr (assoc :running (cdr project-state)))))
+            (push (cons :running 1) (cdr project-state))))
+        (force-mode-line-update t)))))
 
 (provide 'custode)
 ;;; custode.el ends here
