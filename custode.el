@@ -94,15 +94,19 @@ TASK is the name of the task, COMMAND is the command to run."
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-active project-root task-name nil)))
 
+;;;###autoload
 (define-minor-mode custode-mode
   "Minor mode for running tasks on file save."
-  :global t
   :lighter custode-lighter
   :group 'custode
   :init-value nil
   (if custode-mode
       (add-hook 'after-save-hook 'custode--after-save-hook t t)
     (remove-hook 'after-save-hook 'custode--after-save-hook t)))
+
+;;;###autoload
+(define-globalized-minor-mode global-custode-mode custode-mode
+  custode-mode :group 'custode)
 
 (define-compilation-mode custode-task-mode "Custode"
   "Major mode for custode tasks."
