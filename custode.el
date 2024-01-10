@@ -152,9 +152,9 @@ Triggers running active tasks if the file is in a project."
 Creates the state if not found."
   (let ((key (concat project-root "\0" task)))
     (unless (assoc key custode--task-states)
-      (let ((val (copy-tree '((:active . nil)))))
-        (push (cons key (copy-tree '((:active . nil)))) custode--task-states)))
-    (cdr (assoc key custode--task-states))))
+      (let ((val (copy-tree '())))
+        (push (cons key val) custode--task-states)))
+    (assoc key custode--task-states)))
 
 (defun custode--get-project (project-root)
   "Get PROJECT-ROOT project.
@@ -178,7 +178,9 @@ is the state."
          (task (or (alist-get task-name project-tasks nil nil 'equal)
                    (error "Unknown task %s" task-name)))
          (task-state (custode--get-task-state project-root task-name)))
-    (setf (alist-get :active task-state) state)))
+    (if (assoc :active (cdr task-state))
+        (setf (cdr (assoc :active (cdr task-state))) state)
+      (push (cons :active state) (cdr task-state)))))
 
 (defun custode--get-active-tasks (project-root)
   "Get active tasks for PROJECT-ROOT.
@@ -188,7 +190,7 @@ Returns a list of (task-name task-command)."
         (active-tasks (list)))
     (if project-tasks
         (mapcar (lambda (elem)
-                  (when (alist-get :active (custode--get-task-state project-root (car elem)))
+                  (when (alist-get :active (cdr (custode--get-task-state project-root (car elem))))
                     (push (list (car elem) (alist-get :task (cdr elem))) active-tasks))
                   ) project-tasks))
     active-tasks))
