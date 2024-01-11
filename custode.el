@@ -59,6 +59,14 @@ The format is:
 )))
 ")
 
+(defvar custode-prefix-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "a" 'custode-add-task)
+    (define-key map "e" 'custode-enable-task)
+    (define-key map "d" 'custode-disable-task)
+    map)
+  "Keymap for custode commands.")
+
 (defvar custode-lighter
   '(:eval
     (when (and custode-mode
@@ -84,6 +92,10 @@ TASK is the name of the task, COMMAND is the command to run."
     (unless project-root
       (user-error "Not in a project"))
     (unless (custode--get-project project-root)
+      ;; TODO: This could become obsolete when we get a config file.
+      ;; Then custode--get-project could either load a config file, or
+      ;; create an empty project. OTOH, not creating empty projects is
+      ;; nice, so maybe we should keep this.
       (push (cons project-root '()) custode--tasks))
     (let ((project (custode--get-project project-root)))
       (push (cons task (list (cons :task command))) (cdr project)))))
