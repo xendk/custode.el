@@ -67,9 +67,11 @@
               "/some/path/"))))
 
 (describe "state management"
-  :var (custode--project-states)
+  :var (custode--project-states custode--task-states)
   (before-each
-    (setq custode--project-states '()))
+    (setq custode--project-states '())
+    (setq custode--task-states '())
+    )
 
   (describe "custode--get-project-state"
     (it "creates new project states"
@@ -113,7 +115,37 @@
       (expect custode--task-states
               :to-have-same-items-as
               '(("test\0task" . ((:active . t)))
-                ("test\0task2" . ()))))))
+                ("test\0task2" . ())))))
+
+  (describe "args state"
+    (before-each
+      (spy-on 'custode--current-project-root :and-return-value "project"))
+
+    (describe "custode-set-task-args"
+      (it "sets args state"
+        (custode-set-task-args "task" "command args")
+        (expect custode--task-states
+                :to-have-same-items-as
+                '(("project\0task" . ((:args . "command args"))))))
+      (it "unsets args state on empty arg"
+        (custode-set-task-args "task" "command args")
+        (custode-set-task-args "task" "")
+        (expect custode--task-states
+                :to-have-same-items-as
+                '(("project\0task" . ())))))
+
+    (describe "custode--get-task-args"
+      (it "returns nil when no args is set"
+        (expect (custode--get-task-args "project" "task")
+                :to-equal
+                nil))
+
+      (it "returns the currently set args"
+        (custode-set-task-args "task" "command args")
+        (expect (custode--get-task-args "project" "task")
+                :to-equal
+                "command args")
+        ))))
 
 (describe "task management 1"
   :var (custode--tasks)
@@ -246,12 +278,17 @@
 
   (it "triggers task running"
     (custode--trigger "project")
-    (expect 'custode--start :to-have-been-called-with "project" "task" "the command")
-    )
+    (expect 'custode--start :to-have-been-called-with "project" "task" "the command"))
 
   (it "triggers multiple task running"
     (custode-add-task "task2" "the other command")
     (custode-enable-task "task2")
     (custode--trigger "project")
     (expect 'custode--start :to-have-been-called-with "project" "task" "the command")
-    (expect 'custode--start :to-have-been-called-with "project" "task2" "the other command")))
+    (expect 'custode--start :to-have-been-called-with "project" "task2" "the other command"))
+
+  (it "triggers task with args"
+    (custode-set-task-args "task" "the arguments")
+    (custode--trigger "project")
+    (expect 'custode--start :to-have-been-called-with "project" "task" "the command the arguments")
+    ))

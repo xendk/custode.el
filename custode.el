@@ -64,6 +64,7 @@ The format is:
     (define-key map "a" 'custode-add-task)
     (define-key map "e" 'custode-enable-task)
     (define-key map "d" 'custode-disable-task)
+    (define-key map "a" 'custode-set-task-args)
     map)
   "Keymap for custode commands.")
 
@@ -121,6 +122,24 @@ TASK is the name of the task, COMMAND is the command to run."
       (user-error "Not in a project"))))
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-active project-root task-name nil)))
+
+(defun custode-set-task-args (task-name args)
+  "Set argument for a task."
+  (interactive
+   (if (custode--current-project-root)
+       (let ((task-name (completing-read "Task: "
+                                         (custode--get-current-project-tasks) nil t)))
+         (list
+          task-name
+          (read-string "Task args: "
+                       (custode--get-task-args (custode--current-project-root) task-name)
+                       'consult-args-history)))
+     (user-error "Not in a project")))
+  (let ((args (string-trim args))
+        (state (custode--get-task-state (custode--current-project-root) task-name)))
+    (if (equal args "")
+        (setf (cdr state) (assoc-delete-all :args (cdr state)))
+      (push (cons :args args) (cdr state)))))
 
 ;;;###autoload
 (define-minor-mode custode-mode
@@ -235,15 +254,24 @@ Returns a list of task-names."
                   ) project-tasks))
     active-tasks))
 
+(defun custode--get-task-args (project-root task-name)
+  "Get the currently set args for the PROJECT-ROOT TASK-NAME."
+  (let ((state (custode--get-task-state project-root task-name)))
+    (cdr (assoc :args (cdr state)))))
+
 (defun custode--trigger (project-root)
   "Trigger tasks on PROJECT-ROOT."
   (let ((tasks (cdr (custode--get-project project-root)))
         (active-tasks (custode--get-active-tasks project-root))
         (default-directory project-root))
     (dolist (task-name active-tasks)
-      (let ((task (cdr (assoc task-name tasks))))
-        (custode--start project-root task-name (cdr (assoc :task task))))
-      )))
+      (let* ((task (cdr (assoc task-name tasks)))
+             (command (cdr (assoc :task task)))
+             (args (custode--get-task-args project-root task-name)))
+        (custode--start project-root task-name
+                        (if args
+                            (concat command " " args)
+                          command))))))
 
 (defun custode--start (project-root task command)
   "Start TASK with COMMAND."
