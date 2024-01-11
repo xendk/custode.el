@@ -10,7 +10,7 @@
      (wait-for-custode-tasks)
 
      ;; There should be a buffer for the task.
-     (expect (get-buffer (concat "*custode-task " default-directory " task*"))
+     (expect (get-buffer (concat " *custode-task " default-directory " task*"))
              :not :to-be nil)
      ;; But still only one window.
      (expect (length (window-list))
@@ -22,7 +22,7 @@
      (custode--start "project" "task" "false")
      (wait-for-custode-tasks)
 
-     (expect (get-buffer (concat "*custode-task " default-directory " task*"))
+     (expect (get-buffer (concat " *custode-task " default-directory " task*"))
              :not :to-be nil)
 
      ;; It should have popped up a window.
@@ -35,7 +35,7 @@
      (custode--start "project" "task" "false")
      (wait-for-custode-tasks)
 
-     (expect (get-buffer (concat "*custode-task " default-directory " task*"))
+     (expect (get-buffer (concat " *custode-task " default-directory " task*"))
              :not :to-be nil)
 
      ;; It should have popped up a window.

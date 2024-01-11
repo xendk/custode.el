@@ -231,7 +231,7 @@ Returns a list of (task-name task-command)."
   (interactive)
   (let* (;; We need different buffers per project/task.
          (buffer-name-func #'(lambda (name-of-mode)
-                               (concat "*" (downcase name-of-mode) " "
+                               (concat " *" (downcase name-of-mode) " "
                                        default-directory " " task "*"))))
     ;; todo: deal with buffer existence.
     (unless (get-buffer (funcall buffer-name-func "custode-task-mode"))
