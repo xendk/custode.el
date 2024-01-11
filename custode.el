@@ -140,15 +140,16 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
       (setcdr (assoc :running (cdr project-state))
               (1- (cdr (assoc :running (cdr project-state)))))))
   (force-mode-line-update t)
-  (if (string-match "finished" outstr)
-      ;; Remove the buffer window if succesful.
-      (when (get-buffer-window buffer t)
-        ;; Unless it's the only window in the frame.
-        (unless (< (length (window-list nil (get-buffer-window buffer))) 2)
-          (delete-window (get-buffer-window buffer))))
-    (unless (get-buffer-window buffer t)
-      ;; Display buffer if task failed.
-      (display-buffer buffer))))
+  (let ((buffer-window (get-buffer-window buffer t)))
+    (if (string-match "finished" outstr)
+        ;; Remove the buffer window if succesful.
+        (when buffer-window
+          ;; Unless it's the only window in the frame.
+          (unless (< (length (window-list (window-frame buffer-window))) 2)
+            (delete-window buffer-window)))
+      (unless buffer-window
+        ;; Display buffer if task failed.
+        (display-buffer buffer)))))
 
 (defun custode--after-save-hook ()
   "After save hook for custode-mode.
