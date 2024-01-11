@@ -176,7 +176,7 @@
             (custode--task-states simple-state-fixture))
         (expect (custode--get-active-tasks "project")
                 :to-have-same-items-as
-                '(("task1" "task one")))
+                '("task1"))
         )))
 
   (describe "custode-enable-task"
@@ -188,8 +188,7 @@
         (custode-enable-task "task2")
         (expect (custode--get-active-tasks "project")
                 :to-have-same-items-as
-                ;; The reversed order is a quirk of
-                '(("task2" "task two") ("task1" "task one")))))
+                '("task2" "task1"))))
 
     (it "errors on unknown project"
       (spy-on 'custode--current-project-root :and-return-value nil)
@@ -230,3 +229,28 @@
             (custode--task-states simple-state-fixture))
         (expect (custode-disable-task "taskx")
                 :to-throw)))))
+
+(describe "custode--trigger"
+  :var (custode--tasks custode--task-states)
+  (before-each
+    (setq custode--tasks '())
+    (setq custode--task-states '())
+    (spy-on 'custode--current-project-root :and-return-value "unrelated")
+    (custode-add-task "task" "unrelated command")
+    (custode-enable-task "task")
+    (spy-on 'custode--current-project-root :and-return-value "project")
+    (custode-add-task "task" "the command")
+    (custode-enable-task "task")
+    (spy-on 'custode--start))
+
+  (it "triggers task running"
+    (custode--trigger "project")
+    (expect 'custode--start :to-have-been-called-with "project" "task" "the command")
+    )
+
+  (it "triggers multiple task running"
+    (custode-add-task "task2" "the other command")
+    (custode-enable-task "task2")
+    (custode--trigger "project")
+    (expect 'custode--start :to-have-been-called-with "project" "task" "the command")
+    (expect 'custode--start :to-have-been-called-with "project" "task2" "the other command")))

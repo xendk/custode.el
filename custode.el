@@ -169,10 +169,7 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
 Triggers running active tasks if the file is in a project."
   (let ((project-root (custode--current-project-root)))
     (when project-root
-      (let ((tasks (custode--get-active-tasks project-root))
-            (default-directory project-root))
-        (dolist (task tasks)
-          (custode--start project-root (car task) (car (cdr task))))))))
+      (custode--trigger project-root))))
 
 (defun custode--current-project-root ()
   "Get the project root of the current project, or nil if no project."
@@ -228,15 +225,25 @@ is the state."
 (defun custode--get-active-tasks (project-root)
   "Get active tasks for PROJECT-ROOT.
 
-Returns a list of (task-name task-command)."
+Returns a list of task-names."
   (let ((project-tasks (alist-get project-root custode--tasks nil nil 'equal))
         (active-tasks (list)))
     (if project-tasks
         (mapcar (lambda (elem)
                   (when (alist-get :active (cdr (custode--get-task-state project-root (car elem))))
-                    (push (list (car elem) (alist-get :task (cdr elem))) active-tasks))
+                    (push (car elem) active-tasks))
                   ) project-tasks))
     active-tasks))
+
+(defun custode--trigger (project-root)
+  "Trigger tasks on PROJECT-ROOT."
+  (let ((tasks (cdr (custode--get-project project-root)))
+        (active-tasks (custode--get-active-tasks project-root))
+        (default-directory project-root))
+    (dolist (task-name active-tasks)
+      (let ((task (cdr (assoc task-name tasks))))
+        (custode--start project-root task-name (cdr (assoc :task task))))
+      )))
 
 (defun custode--start (project-root task command)
   "Start TASK with COMMAND."
