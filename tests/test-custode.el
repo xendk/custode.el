@@ -147,10 +147,26 @@
                 "command args")
         ))))
 
-(describe "task management 1"
+(describe "task management"
   :var (custode--tasks)
   (before-each
     (setq custode--tasks '()))
+
+  (describe "custode--get-project"
+    (it "returns the requested project"
+      (spy-on 'custode--current-project-root :and-return-value "project")
+      (custode-add-task "task1" "task one")
+      (custode-add-task "task2" "task two")
+
+      (expect (custode--get-project "project")
+              :to-have-same-items-as
+              '("project" . (("task1" . ((:task . "task one")))
+                             ("task2" . ((:task . "task two")))))))
+
+    (it "return nil on unknown project"
+      (expect (custode--get-project "banana")
+              :to-be
+              nil)))
 
   (describe "custode-add-task"
     (it "should add tasks to current project"
@@ -172,9 +188,7 @@
       (expect (custode-add-task "the-task" "the command")
               :to-throw 'error))))
 
-;; TODO when we have an add-task, merge these into "task management
-;; 1", and let them add their fixture in their own before-each.
-(describe "task management 2"
+(describe "state management"
   :var (custode--tasks custode--task-states)
 
   (before-each
@@ -188,18 +202,6 @@
     (setq custode--task-states (copy-tree
                                 '(("project\0task1" . ((:active t)))
                                   ("project2\0task1" . ((:active t)))))))
-
-  (describe "custode--get-project"
-    (it "returns the requested project"
-      (expect (custode--get-project "project")
-              :to-equal
-              '("project" . (("task1" . ((:task . "task one")))
-                             ("task2" . ((:task . "task two")))))))
-
-    (it "return nil on unknown project"
-      (expect (custode--get-project "banana")
-              :to-be
-              nil)))
 
   (describe "custode--get-active-tasks"
     (it "returns active tasks"
