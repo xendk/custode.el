@@ -84,6 +84,9 @@ The value of this variable is a mode line template as in
 
 (put 'custode-lighter 'risky-local-variable t)
 
+(defun custode-buffer-name (project-root task-name)
+  (concat " *custode " project-root " " task-name "*"))
+
 (defun custode-add-task (task command)
   "Add a task to the current project.
 
@@ -273,35 +276,33 @@ Returns a list of task-names."
                             (concat command " " args)
                           command))))))
 
-(defun custode--start (project-root task command)
+(defun custode--start (project-root task-name command)
   "Start TASK with COMMAND."
   (interactive)
   (let* (;; We need different buffers per project/task.
+         (buffer-name (custode-buffer-name project-root task-name))
          (buffer-name-func #'(lambda (name-of-mode)
-                               (concat " *" (downcase name-of-mode) " "
-                                       default-directory " " task "*"))))
-    ;; todo: deal with buffer existence.
-    (unless (get-buffer (funcall buffer-name-func "custode-task-mode"))
-      (let* (;; Don't show the buffer per default.
-             (display-buffer-overriding-action '(display-buffer-no-window))
-             (compilation-buffer-name-function buffer-name-func)
-             ;; Bind `compilation-in-progress' so compile will add our
-             ;; process here, so we can throw it away. If our process
-             ;; gets added to the real `compilation-in-progress',
-             ;; it'll trigger a "[Compiling]" lighter in the
-             ;; mode-line, ond we don't want that.
-             (compilation-in-progress nil)
-             ;; Tell Emacs that it's OK to kill the process without asking.
-             (compilation-always-kill t))
-        ;; `compile' attempts to save buffers, so we'll
-        ;; go directly to `compilation-start'.
-        (compilation-start command 'custode-task-mode)
-        (let ((project-state (custode--get-project-state project-root)))
-          (if (assoc :running (cdr project-state))
-              (setcdr (assoc :running (cdr project-state))
-                      (1+ (cdr (assoc :running (cdr project-state)))))
-            (push (cons :running 1) (cdr project-state))))
-        (force-mode-line-update t)))))
+                               buffer-name)))
+    (let* (;; Don't show the buffer per default.
+           (display-buffer-overriding-action '(display-buffer-no-window))
+           (compilation-buffer-name-function buffer-name-func)
+           ;; Bind `compilation-in-progress' so compile will add our
+           ;; process here, so we can throw it away. If our process
+           ;; gets added to the real `compilation-in-progress',
+           ;; it'll trigger a "[Compiling]" lighter in the
+           ;; mode-line, ond we don't want that.
+           (compilation-in-progress nil)
+           ;; Tell Emacs that it's OK to kill the process without asking.
+           (compilation-always-kill t))
+      ;; `compile' attempts to save buffers, so we'll
+      ;; go directly to `compilation-start'.
+      (compilation-start command 'custode-task-mode)
+      (let ((project-state (custode--get-project-state project-root)))
+        (if (assoc :running (cdr project-state))
+            (setcdr (assoc :running (cdr project-state))
+                    (1+ (cdr (assoc :running (cdr project-state)))))
+          (push (cons :running 1) (cdr project-state))))
+      (force-mode-line-update t))))
 
 (provide 'custode)
 ;;; custode.el ends here

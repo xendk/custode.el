@@ -4,7 +4,7 @@
 (defun wait-for-custode-tasks (&optional delay)
   "Wait for custode tasks to finish."
   (setq delay (or delay 0.01))
-  (let ((buffers (match-buffers "*custode")))
+  (let ((buffers (match-buffers " *custode")))
     (while (seq-some
             (lambda (buffer)
               (let ((comp-proc (get-buffer-process buffer)))
