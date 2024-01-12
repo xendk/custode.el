@@ -175,93 +175,76 @@
 ;; TODO when we have an add-task, merge these into "task management
 ;; 1", and let them add their fixture in their own before-each.
 (describe "task management 2"
-  :var (simple-fixture simple-state-fixture)
+  :var (custode--tasks custode--task-states)
 
   (before-each
     ;; Without copy-tree, all tests would work on the same list.
-    (setq simple-fixture (copy-tree
+    (setq custode--tasks (copy-tree
                           '(("project" .
                              (("task1" . ((:task . "task one")))
                               ("task2" . ((:task . "task two")))))
                             ("project2" .
                              (("task1" . ((:task . "task three"))))))))
-    (setq simple-state-fixture (copy-tree
+    (setq custode--task-states (copy-tree
                                 '(("project\0task1" . ((:active t)))
                                   ("project2\0task1" . ((:active t)))))))
 
   (describe "custode--get-project"
     (it "returns the requested project"
-      (let ((custode--tasks simple-fixture))
-        (expect (custode--get-project "project")
-                :to-equal
-                '("project" . (("task1" . ((:task . "task one")))
-                               ("task2" . ((:task . "task two"))))))))
+      (expect (custode--get-project "project")
+              :to-equal
+              '("project" . (("task1" . ((:task . "task one")))
+                             ("task2" . ((:task . "task two")))))))
 
     (it "return nil on unknown project"
-      (let ((custode--tasks simple-fixture))
-        (expect (custode--get-project "banana")
-                :to-be
-                nil))))
+      (expect (custode--get-project "banana")
+              :to-be
+              nil)))
 
   (describe "custode--get-active-tasks"
     (it "returns active tasks"
-      (let ((custode--tasks simple-fixture)
-            (custode--task-states simple-state-fixture))
-        (expect (custode--get-active-tasks "project")
-                :to-have-same-items-as
-                '("task1"))
-        )))
+      (expect (custode--get-active-tasks "project")
+              :to-have-same-items-as
+              '("task1"))))
 
   (describe "custode-enable-task"
     (it "enables inactive tasks"
       (spy-on 'custode--current-project-root :and-return-value "project")
 
-      (let ((custode--tasks simple-fixture)
-            (custode--task-states simple-state-fixture))
-        (custode-enable-task "task2")
-        (expect (custode--get-active-tasks "project")
-                :to-have-same-items-as
-                '("task2" "task1"))))
+      (custode-enable-task "task2")
+      (expect (custode--get-active-tasks "project")
+              :to-have-same-items-as
+              '("task2" "task1")))
 
     (it "errors on unknown project"
       (spy-on 'custode--current-project-root :and-return-value nil)
-      (let ((custode--tasks simple-fixture)
-            (custode--task-states simple-state-fixture))
-        (expect (custode-enable-task "task1")
-                :to-throw)))
+      (expect (custode-enable-task "task1")
+              :to-throw))
 
     ;; Interactively, this is not possible, but it is when calling
     ;; from lisp.
     (it "errors on unknown task"
       (spy-on 'custode--current-project-root :and-return-value "project")
-      (let ((custode--tasks simple-fixture)
-            (custode--task-states simple-state-fixture))
-        (expect (custode-enable-task "project" "taskx")
-                :to-throw))))
+      (expect (custode-enable-task "project" "taskx")
+              :to-throw)))
 
   (describe "custode-disable-task"
     (it "disables active tasks"
       (spy-on 'custode--current-project-root :and-return-value "project")
-      (let ((custode--tasks simple-fixture)
-            (custode--task-states simple-state-fixture))
-        (custode-disable-task "task1")
-        (expect (custode--get-active-tasks "project")
-                :to-have-same-items-as
-                '())))
+      (custode-disable-task "task1")
+      (expect (custode--get-active-tasks "project")
+              :to-have-same-items-as
+              '()))
 
     (it "errors on unknown project"
       (spy-on 'custode--current-project-root :and-return-value nil)
-      (let ((custode--tasks simple-fixture)
-            (custode--task-states simple-state-fixture))
-        (expect (custode-disable-task "task1")
-                :to-throw)))
+      (expect (custode-disable-task "task1")
+              :to-throw))
 
     (it "errors on unknown task"
       (spy-on 'custode--current-project-root :and-return-value "project")
-      (let ((custode--tasks simple-fixture)
-            (custode--task-states simple-state-fixture))
-        (expect (custode-disable-task "taskx")
-                :to-throw)))))
+      (expect (custode-disable-task "taskx")
+              :to-throw))))
 
 (describe "custode--trigger"
   :var (custode--tasks custode--task-states)
