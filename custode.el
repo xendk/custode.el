@@ -288,9 +288,10 @@ PROJECT-ROOT is the project root, TASK-NAME is the task name and STATE
 is `t' or `nil'."
   (let* ((project-tasks (or (cdr (custode--get-project project-root))
                             (error "Unknown project %s" project-root)))
-         (task (or (alist-get task-name project-tasks nil nil 'equal)
-                   (error "Unknown task %s" task-name)))
+         (task (assoc task-name project-tasks))
          (task-state (custode--get-task-state project-root task-name)))
+    (unless task
+      (error "Unknown task %s" task-name))
     (if (assoc :enabled (cdr task-state))
         (setf (cdr (assoc :enabled (cdr task-state))) state)
       (push (cons :enabled state) (cdr task-state)))))
@@ -302,10 +303,10 @@ Returns a list of task-names."
   (let ((project-tasks (alist-get project-root custode--tasks nil nil 'equal))
         (enabled-tasks (list)))
     (if project-tasks
-        (mapcar (lambda (elem)
-                  (when (alist-get :enabled (cdr (custode--get-task-state project-root (car elem))))
-                    (push (car elem) enabled-tasks))
-                  ) project-tasks))
+        (dolist (task project-tasks)
+          (when (cdr (assoc :enabled (cdr (custode--get-task-state project-root (car task)))))
+            (push (car task) enabled-tasks)))
+      )
     enabled-tasks))
 
 (defun custode--get-task-args (project-root task-name)
@@ -332,7 +333,7 @@ Returns a list of task-names."
   (interactive)
   (let* (;; We need different buffers per project/task.
          (buffer-name (custode-buffer-name project-root task-name))
-         (buffer-name-func #'(lambda (name-of-mode)
+         (buffer-name-func #'(lambda (_name-of-mode)
                                buffer-name)))
     (let* (;; Don't show the buffer per default.
            (display-buffer-overriding-action '(display-buffer-no-window))
