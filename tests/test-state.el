@@ -45,16 +45,16 @@
       ;; Unrelated task.
       (custode--get-task-state "test" "task2")
       (setq task (custode--get-task-state "test" "task"))
-      (push (cons :active t) (cdr task))
+      (push (cons :enabled t) (cdr task))
       (expect (custode--get-task-state "test" "task")
               :to-equal
-              '("test\0task" . ((:active . t))))
+              '("test\0task" . ((:enabled . t))))
       (expect custode--task-states
               :to-have-same-items-as
-              '(("test\0task" . ((:active . t)))
+              '(("test\0task" . ((:enabled . t)))
                 ("test\0task2" . ())))))
 
-  (describe "task :active state"
+  (describe "task :enabled state"
     :var (custode--tasks custode--task-states)
 
     (before-each
@@ -66,21 +66,21 @@
                               ("project2" .
                                (("task1" . ((:task . "task three"))))))))
       (setq custode--task-states (copy-tree
-                                  '(("project\0task1" . ((:active t)))
-                                    ("project2\0task1" . ((:active t)))))))
+                                  '(("project\0task1" . ((:enabled t)))
+                                    ("project2\0task1" . ((:enabled t)))))))
 
-    (describe "custode--get-active-tasks"
-      (it "returns active tasks"
-        (expect (custode--get-active-tasks "project")
+    (describe "custode--get-enabled-tasks"
+      (it "returns enabled tasks"
+        (expect (custode--get-enabled-tasks "project")
                 :to-have-same-items-as
                 '("task1"))))
 
     (describe "custode-enable-task"
-      (it "enables inactive tasks"
+      (it "enables tasks"
         (spy-on 'custode--current-project-root :and-return-value "project")
 
         (custode-enable-task "task2")
-        (expect (custode--get-active-tasks "project")
+        (expect (custode--get-enabled-tasks "project")
                 :to-have-same-items-as
                 '("task2" "task1")))
 
@@ -97,10 +97,10 @@
                 :to-throw)))
 
     (describe "custode-disable-task"
-      (it "disables active tasks"
+      (it "disables tasks"
         (spy-on 'custode--current-project-root :and-return-value "project")
         (custode-disable-task "task1")
-        (expect (custode--get-active-tasks "project")
+        (expect (custode--get-enabled-tasks "project")
                 :to-have-same-items-as
                 '()))
 

@@ -46,7 +46,7 @@ The format is:
 
 The format is:
 ((\"project_root\\0task\" . (
-    (:active . t)
+    (:enabled . t)
 )))
 ")
 
@@ -127,7 +127,7 @@ enabled."
         (completing-read "Task: " (custode--get-current-project-tasks) nil t)
       (user-error "Not in a project"))))
   (let ((project-root (custode--current-project-root)))
-    (custode--set-task-active project-root task-name t)))
+    (custode--set-task-enabled project-root task-name t)))
 
 (defun custode-disable-task (task-name)
   "Disable a task in the current project.
@@ -143,7 +143,7 @@ enabled."
         (completing-read "Task: " (custode--get-current-project-tasks) nil t)
       (user-error "Not in a project"))))
   (let ((project-root (custode--current-project-root)))
-    (custode--set-task-active project-root task-name nil)))
+    (custode--set-task-enabled project-root task-name nil)))
 
 (defun custode-load ()
   "Load project tasks from `custode-save-file' file in project root."
@@ -281,7 +281,7 @@ Returns (PROJECT-ROOT . TASKS)."
     (when project-root
       (cdr (custode--get-project project-root)))))
 
-(defun custode--set-task-active (project-root task-name state)
+(defun custode--set-task-enabled (project-root task-name state)
   "Set tasks enabled' state.
 
 PROJECT-ROOT is the project root, TASK-NAME is the task name and STATE
@@ -291,22 +291,22 @@ is `t' or `nil'."
          (task (or (alist-get task-name project-tasks nil nil 'equal)
                    (error "Unknown task %s" task-name)))
          (task-state (custode--get-task-state project-root task-name)))
-    (if (assoc :active (cdr task-state))
-        (setf (cdr (assoc :active (cdr task-state))) state)
-      (push (cons :active state) (cdr task-state)))))
+    (if (assoc :enabled (cdr task-state))
+        (setf (cdr (assoc :enabled (cdr task-state))) state)
+      (push (cons :enabled state) (cdr task-state)))))
 
-(defun custode--get-active-tasks (project-root)
+(defun custode--get-enabled-tasks (project-root)
   "Get enabled tasks for PROJECT-ROOT.
 
 Returns a list of task-names."
   (let ((project-tasks (alist-get project-root custode--tasks nil nil 'equal))
-        (active-tasks (list)))
+        (enabled-tasks (list)))
     (if project-tasks
         (mapcar (lambda (elem)
-                  (when (alist-get :active (cdr (custode--get-task-state project-root (car elem))))
-                    (push (car elem) active-tasks))
+                  (when (alist-get :enabled (cdr (custode--get-task-state project-root (car elem))))
+                    (push (car elem) enabled-tasks))
                   ) project-tasks))
-    active-tasks))
+    enabled-tasks))
 
 (defun custode--get-task-args (project-root task-name)
   "Get the currently set args for the PROJECT-ROOT TASK-NAME."
@@ -316,9 +316,9 @@ Returns a list of task-names."
 (defun custode--trigger (project-root)
   "Trigger tasks on PROJECT-ROOT."
   (let ((tasks (cdr (custode--get-project project-root)))
-        (active-tasks (custode--get-active-tasks project-root))
+        (enabled-tasks (custode--get-enabled-tasks project-root))
         (default-directory project-root))
-    (dolist (task-name active-tasks)
+    (dolist (task-name enabled-tasks)
       (let* ((task (cdr (assoc task-name tasks)))
              (command (cdr (assoc :task task)))
              (args (custode--get-task-args project-root task-name)))
