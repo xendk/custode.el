@@ -65,6 +65,8 @@ The format is:
     (define-key map "e" 'custode-enable-task)
     (define-key map "d" 'custode-disable-task)
     (define-key map "a" 'custode-set-task-args)
+    (define-key map "l" 'custode-load)
+    (define-key map "s" 'custode-save)
     map)
   "Keymap for custode commands.")
 
@@ -83,6 +85,13 @@ The value of this variable is a mode line template as in
 `mode-line-format'.")
 
 (put 'custode-lighter 'risky-local-variable t)
+
+(defcustom custode-save-file
+  ".custode"
+  "The file in the project directory to save tasks in.
+This should _not_ be set via .dir-locals.el."
+  :group 'custode
+  :type 'file)
 
 (defun custode-buffer-name (project-root task-name)
   (concat " *custode " project-root " " task-name "*"))
@@ -125,6 +134,25 @@ TASK is the name of the task, COMMAND is the command to run."
       (user-error "Not in a project"))))
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-active project-root task-name nil)))
+
+(defun custode-load ()
+  "Load project tasks from `custode-save-file' file in project root."
+  (interactive)
+  (let ((project-root (custode--current-project-root)))
+    (unless project-root
+      (user-error "Not in a project"))
+    (unless (custode--get-project project-root)
+      (push (cons project-root '()) custode--tasks))
+    (setcdr (custode--get-project project-root)
+            (custode--read-project-tasks project-root))))
+
+(defun custode-save ()
+  "Write project tasks to `custode-save-file' file in project root."
+  (interactive)
+  (let ((project-root (custode--current-project-root)))
+    (unless project-root
+      (user-error "Not in a project"))
+    (custode--write-project-tasks project-root (custode--get-current-project-tasks))))
 
 (defun custode-set-task-args (task-name args)
   "Set argument for a task."
@@ -304,5 +332,32 @@ Returns a list of task-names."
           (push (cons :running 1) (cdr project-state))))
       (force-mode-line-update t))))
 
+(defun custode--write-project-tasks (project-root tasks)
+  "Write project task to `custode-save-file' file in PROJECT-ROOT."
+  (let ((filename (concat (file-name-as-directory project-root) custode-save-file)))
+    (with-temp-buffer
+      (insert ";;; -*- lisp-data -*-\n")
+      (let ((print-length nil)
+            (print-level nil))
+        (pp tasks (current-buffer)))
+      (write-region nil nil filename nil 'silent))))
+
+(defun custode--read-project-tasks (project-root)
+  "Read project tasks from `custode-save-file' file in PROJECT-ROOT."
+  (let* ((filename (concat (file-name-as-directory project-root) custode-save-file))
+         (read-data (when (file-exists-p filename)
+                      (with-temp-buffer
+                        (insert-file-contents filename)
+                        (read (current-buffer)))))
+         (tasks))
+    (dolist (item read-data)
+      ;; Task name.
+      (when (stringp (car item))
+        (let ((read-task-name (car item))
+              (read-task (cdr item)))
+          (when (and (assoc :task read-task)
+                     (stringp (cdr (assoc :task read-task))))
+            (push (cons read-task-name (list (assoc :task read-task))) tasks)))))
+    tasks))
 (provide 'custode)
 ;;; custode.el ends here
