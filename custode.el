@@ -104,12 +104,6 @@ TASK is the name of the task, COMMAND is the command to run."
   (let ((project-root (custode--current-project-root)))
     (unless project-root
       (user-error "Not in a project"))
-    (unless (custode--get-project project-root)
-      ;; TODO: This could become obsolete when we get a config file.
-      ;; Then custode--get-project could either load a config file, or
-      ;; create an empty project. OTOH, not creating empty projects is
-      ;; nice, so maybe we should keep this.
-      (push (cons project-root '()) custode--tasks))
     (let ((project (custode--get-project project-root)))
       (push (cons task (list (cons :task command))) (cdr project)))))
 
@@ -141,8 +135,6 @@ TASK is the name of the task, COMMAND is the command to run."
   (let ((project-root (custode--current-project-root)))
     (unless project-root
       (user-error "Not in a project"))
-    (unless (custode--get-project project-root)
-      (push (cons project-root '()) custode--tasks))
     (setcdr (custode--get-project project-root)
             (custode--read-project-tasks project-root))))
 
@@ -249,7 +241,12 @@ Creates the state if not found."
 (defun custode--get-project (project-root)
   "Get PROJECT-ROOT project.
 
-Returns (PROJECT-ROOT . TASKS) or nil if not found."
+Adds PROJECT-ROOT to the list of projects if not found.
+
+Returns (PROJECT-ROOT . TASKS)."
+  (unless (assoc project-root custode--tasks)
+    (push (cons project-root '()) custode--tasks)
+    (custode-load))
   (assoc project-root custode--tasks))
 
 (defun custode--get-current-project-tasks ()

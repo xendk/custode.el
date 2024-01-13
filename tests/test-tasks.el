@@ -36,10 +36,10 @@
               '("project" . (("task1" . ((:task . "task one")))
                              ("task2" . ((:task . "task two")))))))
 
-    (it "return nil on unknown project"
+    (it "creates project on unknown root"
       (expect (custode--get-project "banana")
-              :to-be
-              nil)))
+              :to-have-same-items-as
+              '("banana") . ())))
 
   (describe "custode-add-task"
     (it "should add tasks to current project"
