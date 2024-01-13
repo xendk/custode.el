@@ -64,7 +64,7 @@ The format is:
     (define-key map "a" 'custode-add-task)
     (define-key map "e" 'custode-enable-task)
     (define-key map "d" 'custode-disable-task)
-    (define-key map "a" 'custode-set-task-args)
+    (define-key map "c" 'custode-set-task-args)
     (define-key map "l" 'custode-load)
     (define-key map "s" 'custode-save)
     map)
