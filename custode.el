@@ -99,7 +99,10 @@ This should _not_ be set via .dir-locals.el."
 (defun custode-add-task (task command)
   "Add a task to the current project.
 
-TASK is the name of the task, COMMAND is the command to run."
+The NAME is purely an identifier, you can use any name you find
+appropiate. COMMAND is the command passed to the shell to run.
+Initially the command will be disabled, use `custode-enable-task'
+to enable it."
   (interactive "sTask: \nsCommand: ")
   (let ((project-root (custode--current-project-root)))
     (unless project-root
@@ -110,7 +113,14 @@ TASK is the name of the task, COMMAND is the command to run."
 ;; TODO: These two could further limit the task list to
 ;; enabled/disabled tasks.
 (defun custode-enable-task (task-name)
-  "Enable a task."
+  "Enable a task in the current project.
+
+Enabled tasks will automatically run when files in the project is
+saved.
+
+Initially, all tasks, whether added with `custode-add-task' or
+loaded from `custode-save-file' will be disabled until manually
+enabled."
   (interactive
    (list
     (if (custode--current-project-root)
@@ -120,7 +130,13 @@ TASK is the name of the task, COMMAND is the command to run."
     (custode--set-task-active project-root task-name t)))
 
 (defun custode-disable-task (task-name)
-  "Disable a task."
+  "Disable a task in the current project.
+
+Disabled tasks will not be run when project files are saved.
+
+Initially, all tasks, whether added with `custode-add-task' or
+loaded from `custode-save-file' will be disabled until manually
+enabled."
   (interactive
    (list
     (if (custode--current-project-root)
@@ -147,7 +163,17 @@ TASK is the name of the task, COMMAND is the command to run."
     (custode--write-project-tasks project-root (custode--get-current-project-tasks))))
 
 (defun custode-set-task-args (task-name args)
-  "Set argument for a task."
+  "Set/unset command arguments for TASK-NAME in the current project.
+
+This is, for instance, useful for temporarily focusing tests on
+specific test cases, by supplying the test command with the
+appropriate arguments for only running those tests.
+
+The ARGS is a string appended to the shell command for the
+task (with a space in between). If the string is empty, revert to
+the original task command.
+
+Task arguments persists for the duration of the Emacs session."
   (interactive
    (if (custode--current-project-root)
        (let ((task-name (completing-read "Task: "
@@ -208,7 +234,7 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
 (defun custode--after-save-hook ()
   "After save hook for custode-mode.
 
-Triggers running active tasks if the file is in a project."
+Triggers running enabled tasks if the file is in a project."
   (let ((project-root (custode--current-project-root)))
     (when project-root
       (custode--trigger project-root))))
@@ -256,10 +282,10 @@ Returns (PROJECT-ROOT . TASKS)."
       (cdr (custode--get-project project-root)))))
 
 (defun custode--set-task-active (project-root task-name state)
-  "Set task `active' state.
+  "Set tasks enabled' state.
 
-PROJECT-ROOT is the project root, TASK-NAME is the task name and state
-is the state."
+PROJECT-ROOT is the project root, TASK-NAME is the task name and STATE
+is `t' or `nil'."
   (let* ((project-tasks (or (cdr (custode--get-project project-root))
                             (error "Unknown project %s" project-root)))
          (task (or (alist-get task-name project-tasks nil nil 'equal)
@@ -270,7 +296,7 @@ is the state."
       (push (cons :active state) (cdr task-state)))))
 
 (defun custode--get-active-tasks (project-root)
-  "Get active tasks for PROJECT-ROOT.
+  "Get enabled tasks for PROJECT-ROOT.
 
 Returns a list of task-names."
   (let ((project-tasks (alist-get project-root custode--tasks nil nil 'equal))
