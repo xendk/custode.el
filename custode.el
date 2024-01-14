@@ -77,8 +77,8 @@ The format is:
       (let* ((project-state (custode--get-project-state (custode--current-project-root)))
              (running (cdr (assoc :running (cdr project-state)))))
         (if (and (numberp running) (> running 0))
-            (propertize "👁" 'face 'compilation-mode-line-run)
-          "👁"))))
+            (propertize " 👁" 'face 'compilation-mode-line-run)
+          " 👁"))))
   "Mode line lighter for Custode.
 
 The value of this variable is a mode line template as in
