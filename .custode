@@ -1,5 +1,7 @@
 ;;; -*- lisp-data -*-
-(("test-coverage"
-  (:task . "eldev test --undercover=on,codecov,restart,dontsend"))
+(("compile"
+  (:task . "eldev compile"))
  ("test"
-  (:task . "eldev test")))
+  (:task . "eldev test"))
+ ("test-coverage"
+  (:task . "eldev test --undercover=on,codecov,restart,dontsend")))
