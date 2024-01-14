@@ -229,7 +229,11 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
             (delete-window buffer-window)))
       (unless buffer-window
         ;; Display buffer if task failed.
-        (display-buffer buffer)))))
+        (display-buffer buffer)
+        ;; Make sure we're seing the end of the buffer. This is only
+        ;; needed when creating a new window, as the view will follow
+        ;; the output in reused windows.
+        (set-window-point (get-buffer-window buffer t) (point-max))))))
 
 (defun custode--after-save-hook ()
   "After save hook for custode-mode.
