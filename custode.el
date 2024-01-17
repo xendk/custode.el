@@ -67,6 +67,7 @@ The format is:
     (define-key map "c" 'custode-set-task-args)
     (define-key map "l" 'custode-load)
     (define-key map "s" 'custode-save)
+    (define-key map "p" 'custode-set-buffer-positioning)
     map)
   "Keymap for custode commands.")
 
@@ -169,6 +170,29 @@ enabled."
     (unless project-root
       (user-error "Not in a project"))
     (custode--write-project-tasks project-root (custode--get-current-project-tasks))))
+
+(defun custode-set-buffer-positioning (task-name positioning-function)
+  "Set the positioning function for the Custode buffer."
+  (interactive
+   (if (custode--current-project-root)
+       (list
+        (completing-read "Task: "
+                         (custode--get-current-project-tasks) nil t)
+        (intern (completing-read "Positioning function: "
+                                 (mapcar 'symbol-name custode-buffer-positioning-functions)
+                                 nil t)))
+     (user-error "Not in a project")))
+  (unless (member positioning-function custode-buffer-positioning-functions)
+    (error "Unknown positioning function %s" positioning-function))
+  (let* ((project-root (custode--current-project-root))
+         (project-tasks (or (cdr (custode--get-project project-root))
+                            (error "Unknown project %s" project-root)))
+         (task (assoc task-name project-tasks)))
+    (unless task
+      (error "Unknown task %s" task-name))
+    (if (assoc :positioning-function (cdr task))
+        (setf (cdr (assoc :positioning-function (cdr task))) positioning-function)
+      (push (cons :positioning-function positioning-function) (cdr task)))))
 
 (defun custode-set-task-args (task-name args)
   "Set/unset command arguments for TASK-NAME in the current project.
@@ -339,11 +363,13 @@ Returns a list of task-names."
     (dolist (task-name enabled-tasks)
       (let* ((task (cdr (assoc task-name tasks)))
              (command (cdr (assoc :task task)))
+             (positioning-function (cdr (assoc :positioning-function task)))
              (args (custode--get-task-args project-root task-name)))
         (custode--start project-root task-name
                         (if args
                             (concat command " " args)
-                          command))))))
+                          command)
+                        positioning-function)))))
 
 (defun custode--start (project-root task-name command &optional position-function)
   "Start TASK-NAME in PROJECT-ROOT with COMMAND.
@@ -401,10 +427,20 @@ POSITION-FUNCTION is a function that positions the buffer afterwards."
       ;; Task name.
       (when (stringp (car item))
         (let ((read-task-name (car item))
-              (read-task (cdr item)))
+              (read-task (cdr item))
+              (temp-task '()))
+          ;; Task name is required.
           (when (and (assoc :task read-task)
                      (stringp (cdr (assoc :task read-task))))
-            (push (cons read-task-name (list (assoc :task read-task))) tasks)))))
+            (push (cons :task (cdr (assoc :task read-task))) temp-task)
+            ;; Check for other optional values.
+            (when (and (assoc :positioning-function read-task)
+                       (symbolp (cdr (assoc :positioning-function read-task)))
+                       (memq (cdr (assoc :positioning-function read-task))
+                             custode-buffer-positioning-functions))
+              (push (cons :positioning-function (cdr (assoc :positioning-function read-task))) temp-task))
+            (push (cons read-task-name temp-task) tasks)))))
     tasks))
+
 (provide 'custode)
 ;;; custode.el ends here

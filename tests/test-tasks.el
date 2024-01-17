@@ -59,4 +59,22 @@
     (it "errors when no project is active"
       (spy-on 'custode--current-project-root :and-return-value nil)
       (expect (custode-add-task "the-task" "the command")
-              :to-throw 'error))))
+              :to-throw 'error)))
+
+  (describe "custode-set-buffer-positioning"
+    (before-each
+      (spy-on 'custode--current-project-root :and-return-value "the-project/")
+      (custode-add-task "the-task" "the command"))
+
+    (it "sets the buffer positioning"
+      (custode-set-buffer-positioning "the-task" 'custode--position-buffer-end)
+      (expect (cdr (assoc "the-task" (cdr (assoc "the-project/" custode--tasks))))
+              :to-have-same-items-as
+              '((:task . "the command")
+                (:positioning-function . custode--position-buffer-end))))
+
+    ;; Can only happen when called from Lisp.
+    (it "errors on invalid positioning"
+      (expect (custode-set-buffer-positioning "the-task" 'banana)
+              :to-throw 'error)))
+  )

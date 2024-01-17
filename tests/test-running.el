@@ -25,19 +25,19 @@
 
     (it "triggers task running"
       (custode--trigger "project")
-      (expect 'custode--start :to-have-been-called-with "project" "task" "the command"))
+      (expect 'custode--start :to-have-been-called-with "project" "task" "the command" nil))
 
     (it "triggers multiple task running"
       (custode-add-task "task2" "the other command")
       (custode-enable-task "task2")
       (custode--trigger "project")
-      (expect 'custode--start :to-have-been-called-with "project" "task" "the command")
-      (expect 'custode--start :to-have-been-called-with "project" "task2" "the other command"))
+      (expect 'custode--start :to-have-been-called-with "project" "task" "the command" nil)
+      (expect 'custode--start :to-have-been-called-with "project" "task2" "the other command" nil))
 
     (it "triggers task with args"
       (custode-set-task-args "task" "the arguments")
       (custode--trigger "project")
-      (expect 'custode--start :to-have-been-called-with "project" "task" "the command the arguments")
+      (expect 'custode--start :to-have-been-called-with "project" "task" "the command the arguments" nil)
       ))
 
   (describe "custode--start"

@@ -13,7 +13,8 @@
       (assess-with-filesystem
           '()
         (setq tasks '(("task1" . ((:task . "task one")))
-                      ("task2" . ((:task . "task two")))))
+                      ("task2" . ((:task . "task two")
+                                  (:positioning-function . custode--position-buffer-end)))))
         (custode--write-project-tasks default-directory tasks)
 
         (expect (assess-file (concat (file-name-as-directory default-directory) custode-save-file))
@@ -22,7 +23,8 @@
 ((\"task1\"
   (:task . \"task one\"))
  (\"task2\"
-  (:task . \"task two\")))
+  (:task . \"task two\")
+  (:positioning-function . custode--position-buffer-end)))
 ")
         )
       ))
@@ -34,9 +36,13 @@
 ((\"task1\"
   (:task . \"task one\"))
  (\"task2\"
-  (:task . \"task two\")))
+  (:task . \"task two\")
+  (:positioning-function . custode--position-buffer-end))
+ (\"task3\"
+  (:invalid . \"task three\")))
 "))
-        (expect (custode--read-project-tasks default-directory)
-                :to-have-same-items-as
-                '(("task1" . ((:task . "task one")))
-                  ("task2" . ((:task . "task two")))))))))
+          (expect (custode--read-project-tasks default-directory)
+                  :to-have-same-items-as
+                  '(("task1" . ((:task . "task one")))
+                    ("task2" . ((:positioning-function . custode--position-buffer-end)
+                                (:task . "task two")))))))))

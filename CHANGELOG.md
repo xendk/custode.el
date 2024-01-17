@@ -15,3 +15,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lighter highlights when task running.
 - Load and save of project tasks.
 - Automatic loading of tasks in projects on discovery.
+- Configurable positioning of the compilation buffer.
