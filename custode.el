@@ -93,6 +93,14 @@ This should _not_ be set via .dir-locals.el."
   :group 'custode
   :type 'file)
 
+(defcustom custode-buffer-positioning-functions
+  '(custode--position-buffer-end custode--position-buffer-beginning)
+  "List of allowed buffer positioning functions.
+
+These functions are called with the buffer as the only argument"
+  :group 'custode
+  :type '(repeat function))
+
 (defun custode-buffer-name (project-root task-name)
   (concat " *custode " project-root " " task-name "*"))
 
@@ -229,11 +237,16 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
             (delete-window buffer-window)))
       (unless buffer-window
         ;; Display buffer if task failed.
-        (display-buffer buffer)
-        ;; Make sure we're seing the end of the buffer. This is only
-        ;; needed when creating a new window, as the view will follow
-        ;; the output in reused windows.
-        (set-window-point (get-buffer-window buffer t) (point-max))))))
+        (display-buffer buffer))
+      (funcall custode-position-function buffer))))
+
+(defun custode--position-buffer-end (buffer)
+  "Position BUFFER at the end."
+  (set-window-point (get-buffer-window buffer t) (point-max)))
+
+(defun custode--position-buffer-beginning (buffer)
+  "Position BUFFER at the beginning."
+  (set-window-point (get-buffer-window buffer t) (point-min)))
 
 (defun custode--after-save-hook ()
   "After save hook for custode-mode.
@@ -332,8 +345,10 @@ Returns a list of task-names."
                             (concat command " " args)
                           command))))))
 
-(defun custode--start (project-root task-name command)
-  "Start TASK with COMMAND."
+(defun custode--start (project-root task-name command &optional position-function)
+  "Start TASK-NAME in PROJECT-ROOT with COMMAND.
+
+POSITION-FUNCTION is a function that positions the buffer afterwards."
   (interactive)
   (let* (;; We need different buffers per project/task.
          (buffer-name (custode-buffer-name project-root task-name))
@@ -352,12 +367,16 @@ Returns a list of task-names."
            (compilation-always-kill t))
       ;; `compile' attempts to save buffers, so we'll
       ;; go directly to `compilation-start'.
-      (compilation-start command 'custode-task-mode)
-      (let ((project-state (custode--get-project-state project-root)))
+      (let* ((buffer (compilation-start command 'custode-task-mode))
+             (project-state (custode--get-project-state project-root)))
         (if (assoc :running (cdr project-state))
             (setcdr (assoc :running (cdr project-state))
                     (1+ (cdr (assoc :running (cdr project-state)))))
-          (push (cons :running 1) (cdr project-state))))
+          (push (cons :running 1) (cdr project-state)))
+        (with-current-buffer buffer
+          (setq-local custode-position-function (or position-function
+                                                    'custode--position-buffer-beginning)))
+        )
       (force-mode-line-update t))))
 
 (defun custode--write-project-tasks (project-root tasks)
