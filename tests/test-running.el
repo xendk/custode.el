@@ -48,7 +48,30 @@
        (wait-for-custode-tasks)
        (expect (length (window-list))
                :to-equal
-               1))))
+               1)))
+
+    (describe "buffer display"
+      (it "shows the end of the buffer"
+        (assess-with-preserved-buffer-list
+         (custode--start "project" "task" "false")
+         (wait-for-custode-tasks)
+
+         (with-current-buffer (get-buffer (custode-buffer-name "project" "task"))
+           (expect (window-point (get-buffer-window (current-buffer)))
+                   :to-equal
+                   (point-max)))))
+
+      (it "shows the end of the buffer, on reruns"
+        (assess-with-preserved-buffer-list
+         (custode--start "project" "task" "false")
+         (wait-for-custode-tasks)
+         (custode--start "project" "task" "false")
+         (wait-for-custode-tasks)
+
+         (with-current-buffer (get-buffer (custode-buffer-name "project" "task"))
+           (expect (window-point (get-buffer-window (current-buffer)))
+                   :to-equal
+                   (point-max)))))))
 
   (describe "custode--trigger"
     :var (custode--tasks custode--task-states)
