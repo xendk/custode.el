@@ -405,9 +405,8 @@ POSITION-FUNCTION is a function that positions the buffer afterwards."
                     (1+ (cdr (assoc :running (cdr project-state)))))
           (push (cons :running 1) (cdr project-state)))
         (with-current-buffer buffer
-          (setq-local custode-position-function (or position-function
-                                                    'custode--position-buffer-beginning)))
-        )
+          (setq-local custode-position-function
+                      (or position-function 'custode--position-buffer-beginning))))
       (force-mode-line-update t))))
 
 (defun custode--write-project-tasks (project-root tasks)
