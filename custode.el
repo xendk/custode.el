@@ -74,7 +74,7 @@ The format is:
 (defvar custode-lighter
   '(:eval
     (when (and custode-mode
-               (custode--get-current-project-tasks))
+               (custode--get-current-project-task-names))
       (let* ((project-state (custode--get-project-state (custode--current-project-root)))
              (running (cdr (assoc :running (cdr project-state)))))
         (if (and (numberp running) (> running 0))
@@ -133,7 +133,7 @@ enabled."
   (interactive
    (list
     (if (custode--current-project-root)
-        (completing-read "Task: " (custode--get-current-project-tasks) nil t)
+        (completing-read "Task: " (custode--get-current-project-task-names) nil t)
       (user-error "Not in a project"))))
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-enabled project-root task-name t)))
@@ -149,7 +149,7 @@ enabled."
   (interactive
    (list
     (if (custode--current-project-root)
-        (completing-read "Task: " (custode--get-current-project-tasks) nil t)
+        (completing-read "Task: " (custode--get-current-project-task-names) nil t)
       (user-error "Not in a project"))))
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-enabled project-root task-name nil)))
@@ -169,7 +169,7 @@ enabled."
   (let ((project-root (custode--current-project-root)))
     (unless project-root
       (user-error "Not in a project"))
-    (custode--write-project-tasks project-root (custode--get-current-project-tasks))))
+    (custode--write-project-tasks project-root (custode--get-current-project-task-names))))
 
 (defun custode-set-buffer-positioning (task-name positioning-function)
   "Set the positioning function for the Custode buffer."
@@ -177,7 +177,7 @@ enabled."
    (if (custode--current-project-root)
        (list
         (completing-read "Task: "
-                         (custode--get-current-project-tasks) nil t)
+                         (custode--get-current-project-task-names) nil t)
         (intern (completing-read "Positioning function: "
                                  (mapcar 'symbol-name custode-buffer-positioning-functions)
                                  nil t)))
@@ -209,7 +209,7 @@ Task arguments persists for the duration of the Emacs session."
   (interactive
    (if (custode--current-project-root)
        (let ((task-name (completing-read "Task: "
-                                         (custode--get-current-project-tasks) nil t)))
+                                         (custode--get-current-project-task-names) nil t)))
          (list
           task-name
           (read-string "Task args: "
@@ -316,7 +316,7 @@ Returns (PROJECT-ROOT . TASKS)."
     (custode-load))
   (assoc project-root custode--tasks))
 
-(defun custode--get-current-project-tasks ()
+(defun custode--get-current-project-task-names ()
   "Get tasks of current project."
   (let ((project-root (custode--current-project-root)))
     (when project-root
