@@ -131,7 +131,24 @@
       (it "errors on unknown task"
         (spy-on 'custode--current-project-root :and-return-value "project")
         (expect (custode-disable-task "taskx")
-                :to-throw))))
+                :to-throw))
+
+      (it "deletes buffer when disabling task"
+        (spy-on 'custode--current-project-root :and-return-value "project")
+        (let ((buffer-name (custode-buffer-name "project" "task1")))
+          (get-buffer-create buffer-name)
+          (funcall-interactively 'custode-disable-task "task1")
+          (expect (get-buffer buffer-name)
+                  :to-be nil)))
+
+      (it "leaves buffer alone with prefix argument"
+        (spy-on 'custode--current-project-root :and-return-value "project")
+        (let ((buffer-name (custode-buffer-name "project" "task1")))
+          (get-buffer-create buffer-name)
+          (let ((current-prefix-arg '(4)))
+            (funcall-interactively 'custode-disable-task "task1"))
+          (expect (get-buffer buffer-name)
+                  :not :to-be nil)))))
 
   (describe "task :args state"
     (before-each

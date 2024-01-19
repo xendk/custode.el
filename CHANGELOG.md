@@ -18,3 +18,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable positioning of the compilation buffer.
 - Trigger tasks when enabled interactively, unless called with prefix
   arg.
+- Deletes task buffer when disabling tasks.

@@ -72,6 +72,8 @@ you configured:
   a file in the project. When run interactively, this will also
   trigger the task (can be suppressed with a prefix orgument). 
 * `d`: Disable a task. Stops a task from running automatically again.
+  Interactively, this will also delete the task buffer, unless called
+  with a prefix argument.
 * `c`: Set task arguments. When arguments has been set, they're added
   to the shell command when the task run. A use case is temporarily
   adding arguments to a test command to only run a subset of tests.

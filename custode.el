@@ -108,6 +108,7 @@ These functions are called with the buffer as the only argument"
   :type '(repeat function))
 
 (defun custode-buffer-name (project-root task-name)
+  "Get the buffer name for the TASK-NAME task in PROJECT-ROOT project."
   (concat " *custode " project-root " " task-name "*"))
 
 (defun custode-add-task (task command)
@@ -162,7 +163,9 @@ enabled."
         (completing-read "Task: " (custode--get-current-project-task-names) nil t)
       (user-error "Not in a project"))))
   (let ((project-root (custode--current-project-root)))
-    (custode--set-task-enabled project-root task-name nil)))
+    (custode--set-task-enabled project-root task-name nil)
+    (when (and (called-interactively-p) (not current-prefix-arg))
+      (kill-buffer (custode-buffer-name project-root task-name)))))
 
 (defun custode-load ()
   "Load project tasks from `custode-save-file' file in project root."
