@@ -69,7 +69,8 @@ you configured:
   starts out disabled, so adding a task wont make anything happen in
   itself.
 * `e`: Enable a task. This makes custode run this task whenever saving
-  a file in the project.
+  a file in the project. When run interactively, this will also
+  trigger the task (can be suppressed with a prefix orgument). 
 * `d`: Disable a task. Stops a task from running automatically again.
 * `c`: Set task arguments. When arguments has been set, they're added
   to the shell command when the task run. A use case is temporarily

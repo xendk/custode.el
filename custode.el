@@ -134,14 +134,19 @@ saved.
 
 Initially, all tasks, whether added with `custode-add-task' or
 loaded from `custode-save-file' will be disabled until manually
-enabled."
+enabled.
+
+Interactively, run the task after enabling it, unless called with
+a prefix argument."
   (interactive
    (list
     (if (custode--current-project-root)
         (completing-read "Task: " (custode--get-current-project-task-names) nil t)
       (user-error "Not in a project"))))
   (let ((project-root (custode--current-project-root)))
-    (custode--set-task-enabled project-root task-name t)))
+    (custode--set-task-enabled project-root task-name t)
+    (when (and (called-interactively-p) (not current-prefix-arg))
+      (custode--trigger project-root (list task-name)))))
 
 (defun custode-disable-task (task-name)
   "Disable a task in the current project.
@@ -360,12 +365,15 @@ Returns a list of task-names."
   (let ((state (custode--get-task-state project-root task-name)))
     (cdr (assoc :args (cdr state)))))
 
-(defun custode--trigger (project-root)
-  "Trigger tasks on PROJECT-ROOT."
+(defun custode--trigger (project-root &optional tasks)
+  "Trigger tasks on PROJECT-ROOT.
+
+Optionally supply TASKS to trigger these specific tasks,
+regardless of whether they're enabled or not."
   (let ((tasks (cdr (custode--get-project project-root)))
-        (enabled-tasks (custode--get-enabled-tasks project-root))
+        (trigger-tasks (or tasks (custode--get-enabled-tasks project-root)))
         (default-directory project-root))
-    (dolist (task-name enabled-tasks)
+    (dolist (task-name trigger-tasks)
       (let* ((task (cdr (assoc task-name tasks)))
              (command (cdr (assoc :task task)))
              (positioning-function (cdr (assoc :positioning-function task)))

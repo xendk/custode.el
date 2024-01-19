@@ -94,7 +94,26 @@
       (it "errors on unknown task"
         (spy-on 'custode--current-project-root :and-return-value "project")
         (expect (custode-enable-task "project" "taskx")
-                :to-throw)))
+                :to-throw))
+
+      (it "triggers task when called interactively"
+        (spy-on 'custode--current-project-root :and-return-value "project")
+        (spy-on 'custode--trigger)
+
+        (funcall-interactively 'custode-enable-task "task2")
+        (expect 'custode--trigger
+                :to-have-been-called-with
+                "project" '("task2")))
+
+      (it "doesn't triggers task when called interactively with prefix argument"
+        (spy-on 'custode--current-project-root :and-return-value "project")
+        (spy-on 'custode--trigger)
+
+        (let ((current-prefix-arg '(4)))
+          (funcall-interactively 'custode-enable-task "task2"))
+        (expect 'custode--trigger
+                :not :to-have-been-called
+                )))
 
     (describe "custode-disable-task"
       (it "disables tasks"

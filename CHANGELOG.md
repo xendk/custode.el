@@ -16,3 +16,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Load and save of project tasks.
 - Automatic loading of tasks in projects on discovery.
 - Configurable positioning of the compilation buffer.
+- Trigger tasks when enabled interactively, unless called with prefix
+  arg.
