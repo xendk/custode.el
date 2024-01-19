@@ -141,9 +141,7 @@ Interactively, run the task after enabling it, unless called with
 a prefix argument."
   (interactive
    (list
-    (if (custode--current-project-root)
-        (completing-read "Task: " (custode--get-current-project-task-names) nil t)
-      (user-error "Not in a project"))))
+    (custode--completing-read-task)))
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-enabled project-root task-name t)
     (when (and (called-interactively-p) (not current-prefix-arg))
@@ -159,9 +157,7 @@ loaded from `custode-save-file' will be disabled until manually
 enabled."
   (interactive
    (list
-    (if (custode--current-project-root)
-        (completing-read "Task: " (custode--get-current-project-task-names) nil t)
-      (user-error "Not in a project"))))
+    (custode--completing-read-task)))
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-enabled project-root task-name nil)
     (when (and (called-interactively-p) (not current-prefix-arg))
@@ -187,14 +183,11 @@ enabled."
 (defun custode-set-buffer-positioning (task-name positioning-function)
   "Set the positioning function for the Custode buffer."
   (interactive
-   (if (custode--current-project-root)
-       (list
-        (completing-read "Task: "
-                         (custode--get-current-project-task-names) nil t)
-        (intern (completing-read "Positioning function: "
-                                 (mapcar 'symbol-name custode-buffer-positioning-functions)
-                                 nil t)))
-     (user-error "Not in a project")))
+   (list
+    (custode--completing-read-task)
+    (intern (completing-read "Positioning function: "
+                             (mapcar 'symbol-name custode-buffer-positioning-functions)
+                             nil t))))
   (unless (member positioning-function custode-buffer-positioning-functions)
     (error "Unknown positioning function %s" positioning-function))
   (let* ((project-root (custode--current-project-root))
@@ -220,15 +213,12 @@ the original task command.
 
 Task arguments persists for the duration of the Emacs session."
   (interactive
-   (if (custode--current-project-root)
-       (let ((task-name (completing-read "Task: "
-                                         (custode--get-current-project-task-names) nil t)))
-         (list
-          task-name
-          (read-string "Task args: "
-                       (custode--get-task-args (custode--current-project-root) task-name)
-                       'consult-args-history)))
-     (user-error "Not in a project")))
+   (let ((task-name (custode--completing-read-task)))
+     (list
+      task-name
+      (read-string "Task args: "
+                   (custode--get-task-args (custode--current-project-root) task-name)
+                   'consult-args-history))))
   (let ((args (string-trim args))
         (state (custode--get-task-state (custode--current-project-root) task-name)))
     (if (equal args "")
@@ -367,6 +357,12 @@ Returns a list of task-names."
   "Get the currently set args for the PROJECT-ROOT TASK-NAME."
   (let ((state (custode--get-task-state project-root task-name)))
     (cdr (assoc :args (cdr state)))))
+
+(defun custode--completing-read-task ()
+  "Use `completing-read' to read a task in the current project."
+  (unless (custode--current-project-root)
+    (user-error "Not in a project"))
+  (completing-read "Task: " (custode--get-current-project-task-names) nil t))
 
 (defun custode--trigger (project-root &optional tasks)
   "Trigger tasks on PROJECT-ROOT.
