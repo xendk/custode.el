@@ -87,6 +87,11 @@ The value of this variable is a mode line template as in
 
 (put 'custode-lighter 'risky-local-variable t)
 
+(defvar custode-position-function
+  "Function to call to position task buffer.
+
+Automatically set in relevant buffers by custode--start.")
+
 (defcustom custode-save-file
   ".custode"
   "The file in the project directory to save tasks in.
