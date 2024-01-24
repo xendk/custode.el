@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Global minor mode for running tasks.
 - Running enabled tasks on file save.
 - Show task output on failure, hide it on success.
-- Commands for adding, enabling and disabling of tasks.
+- Commands for creating, deleting, enabling and disabling of tasks.
 - Mode-line lighter for buffers in projects with tasks.
 - Lighter highlights when task running.
 - Load and save of project tasks.

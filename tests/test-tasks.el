@@ -61,6 +61,18 @@
       (expect (custode-create-task "the-task" "the command")
               :to-throw 'error)))
 
+  (describe "custode-delete-task"
+    (before-each
+      (spy-on 'custode--current-project-root :and-return-value "the-project/")
+      (spy-on 'yes-or-no-p :and-return-value t)
+      (custode-create-task "the-task" "the command"))
+
+    (it "should remove tasks from current project"
+      (custode-delete-task "the-task")
+      (expect (cdr (assoc "the-project/" custode--tasks))
+              :to-have-same-items-as
+              '())))
+
   (describe "custode-set-buffer-positioning"
     (before-each
       (spy-on 'custode--current-project-root :and-return-value "the-project/")

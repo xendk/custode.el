@@ -68,6 +68,7 @@ you configured:
   should be a command that can be run by the shell. New tasks always
   starts out disabled, so adding a task wont make anything happen in
   itself.
+* `k`: Remove a task.
 * `e`: Enable a task. This makes custode run this task whenever saving
   a file in the project. When run interactively, this will also
   trigger the task (can be suppressed with a prefix orgument). 

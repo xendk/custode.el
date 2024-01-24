@@ -62,6 +62,7 @@ The format is:
 (defvar custode-prefix-map
   (let ((map (make-sparse-keymap)))
     (define-key map "c" 'custode-create-task)
+    (define-key map "k" 'custode-delete-task)
     (define-key map "e" 'custode-enable-task)
     (define-key map "d" 'custode-disable-task)
     (define-key map "a" 'custode-set-task-args)
@@ -124,6 +125,17 @@ to enable it."
       (user-error "Not in a project"))
     (let ((project (custode--get-project project-root)))
       (push (cons task-name (list (cons :task command))) (cdr project)))))
+
+(defun custode-delete-task (task-name)
+  "Delete a task from the current project."
+  (interactive
+   (list
+    (custode--completing-read-task)))
+  (if (yes-or-no-p (format "Really delete task %s? " task-name))
+      (let* ((project-root (custode--current-project-root))
+             (project (custode--get-project project-root)))
+        (setcdr project (assoc-delete-all task-name (cdr project))))
+    (message "Task not deleted")))
 
 ;; TODO: These two could further limit the task list to
 ;; enabled/disabled tasks.
