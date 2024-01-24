@@ -61,10 +61,10 @@ The format is:
 
 (defvar custode-prefix-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "a" 'custode-add-task)
+    (define-key map "c" 'custode-create-task)
     (define-key map "e" 'custode-enable-task)
     (define-key map "d" 'custode-disable-task)
-    (define-key map "c" 'custode-set-task-args)
+    (define-key map "a" 'custode-set-task-args)
     (define-key map "l" 'custode-load)
     (define-key map "s" 'custode-save)
     (define-key map "p" 'custode-set-buffer-positioning)
@@ -111,7 +111,7 @@ These functions are called with the buffer as the only argument"
   "Get the buffer name for the TASK-NAME task in PROJECT-ROOT project."
   (concat " *custode " project-root " " task-name "*"))
 
-(defun custode-add-task (task command)
+(defun custode-create-task (task-name command)
   "Add a task to the current project.
 
 The NAME is purely an identifier, you can use any name you find
@@ -123,7 +123,7 @@ to enable it."
     (unless project-root
       (user-error "Not in a project"))
     (let ((project (custode--get-project project-root)))
-      (push (cons task (list (cons :task command))) (cdr project)))))
+      (push (cons task-name (list (cons :task command))) (cdr project)))))
 
 ;; TODO: These two could further limit the task list to
 ;; enabled/disabled tasks.
@@ -133,7 +133,7 @@ to enable it."
 Enabled tasks will automatically run when files in the project is
 saved.
 
-Initially, all tasks, whether added with `custode-add-task' or
+Initially, all tasks, whether added with `custode-create-task' or
 loaded from `custode-save-file' will be disabled until manually
 enabled.
 
@@ -152,7 +152,7 @@ a prefix argument."
 
 Disabled tasks will not be run when project files are saved.
 
-Initially, all tasks, whether added with `custode-add-task' or
+Initially, all tasks, whether added with `custode-create-task' or
 loaded from `custode-save-file' will be disabled until manually
 enabled."
   (interactive

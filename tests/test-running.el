@@ -16,10 +16,10 @@
       (setq custode--tasks '())
       (setq custode--task-states '())
       (spy-on 'custode--current-project-root :and-return-value "unrelated")
-      (custode-add-task "task" "unrelated command")
+      (custode-create-task "task" "unrelated command")
       (custode-enable-task "task")
       (spy-on 'custode--current-project-root :and-return-value "project")
-      (custode-add-task "task" "the command")
+      (custode-create-task "task" "the command")
       (custode-enable-task "task")
       (spy-on 'custode--start))
 
@@ -28,7 +28,7 @@
       (expect 'custode--start :to-have-been-called-with "project" "task" "the command" nil))
 
     (it "triggers multiple task running"
-      (custode-add-task "task2" "the other command")
+      (custode-create-task "task2" "the other command")
       (custode-enable-task "task2")
       (custode--trigger "project")
       (expect 'custode--start :to-have-been-called-with "project" "task" "the command" nil)

@@ -28,8 +28,8 @@
   (describe "custode--get-project"
     (it "returns the requested project"
       (spy-on 'custode--current-project-root :and-return-value "project")
-      (custode-add-task "task1" "task one")
-      (custode-add-task "task2" "task two")
+      (custode-create-task "task1" "task one")
+      (custode-create-task "task2" "task two")
 
       (expect (custode--get-project "project")
               :to-have-same-items-as
@@ -41,16 +41,16 @@
               :to-have-same-items-as
               '("banana") . ())))
 
-  (describe "custode-add-task"
+  (describe "custode-create-task"
     (it "should add tasks to current project"
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
-      (custode-add-task "the-task" "the command")
+      (custode-create-task "the-task" "the command")
       (expect custode--tasks
               :to-equal
               '(("the-project/" .
                  (("the-task" . ((:task . "the command")))))))
 
-      (custode-add-task "another-task" "another command")
+      (custode-create-task "another-task" "another command")
       (expect (cdr (assoc "the-project/" custode--tasks))
               :to-have-same-items-as
               '(("the-task" . ((:task . "the command")))
@@ -58,13 +58,13 @@
 
     (it "errors when no project is active"
       (spy-on 'custode--current-project-root :and-return-value nil)
-      (expect (custode-add-task "the-task" "the command")
+      (expect (custode-create-task "the-task" "the command")
               :to-throw 'error)))
 
   (describe "custode-set-buffer-positioning"
     (before-each
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
-      (custode-add-task "the-task" "the command"))
+      (custode-create-task "the-task" "the command"))
 
     (it "sets the buffer positioning"
       (custode-set-buffer-positioning "the-task" 'custode--position-buffer-end)

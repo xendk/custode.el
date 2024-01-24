@@ -63,7 +63,7 @@ In a buffer visiting a file that is part of a project recognized by
 `project`, you'll have the following commands available on the prefix
 you configured:
 
-* `a`: Adds a new task to the project. The task name is purely for
+* `c`: Create a new task for the project. The task name is purely for
   identification, you can call it whatever you want, and the command
   should be a command that can be run by the shell. New tasks always
   starts out disabled, so adding a task wont make anything happen in
@@ -74,7 +74,7 @@ you configured:
 * `d`: Disable a task. Stops a task from running automatically again.
   Interactively, this will also delete the task buffer, unless called
   with a prefix argument.
-* `c`: Set task arguments. When arguments has been set, they're added
+* `a`: Set task arguments. When arguments has been set, they're added
   to the shell command when the task run. A use case is temporarily
   adding arguments to a test command to only run a subset of tests.
   Note that arguments only persist in the current Emacs session,
