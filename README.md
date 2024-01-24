@@ -86,6 +86,9 @@ you configured:
   tasks are automatically loaded on project discovery.
 * `s`: Saves configuration to the configuration file in the project
   root.
+* `p`: Select how to position the buffer when the task has run.
+  Depending on the run command, start or end of buffer might be most
+  appropriate. This is saved with the configuration.
 
 
 # Recommended configuration

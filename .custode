@@ -1,7 +1,8 @@
 ;;; -*- lisp-data -*-
-(("compile"
-  (:task . "eldev compile"))
+(("test-coverage"
+  (:task . "eldev test --undercover=on,codecov,restart,dontsend"))
  ("test"
+  (:positioning-function . custode--position-buffer-end)
   (:task . "eldev test"))
- ("test-coverage"
-  (:task . "eldev test --undercover=on,codecov,restart,dontsend")))
+ ("compile"
+  (:task . "eldev compile")))
