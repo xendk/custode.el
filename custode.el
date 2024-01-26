@@ -124,7 +124,8 @@ to enable it."
     (unless project-root
       (user-error "Not in a project"))
     (let ((project (custode--get-project project-root)))
-      (push (cons task-name (list (cons :task command))) (cdr project)))))
+      (push (cons task-name (list (cons :task command))) (cdr project))
+      (message "Created %s task." task-name))))
 
 (defun custode-delete-task (task-name)
   "Delete a task from the current project."
@@ -134,7 +135,8 @@ to enable it."
   (if (yes-or-no-p (format "Really delete task %s? " task-name))
       (let* ((project-root (custode--current-project-root))
              (project (custode--get-project project-root)))
-        (setcdr project (assoc-delete-all task-name (cdr project))))
+        (setcdr project (assoc-delete-all task-name (cdr project)))
+        (message "Deleted %s task." task-name))
     (message "Task not deleted")))
 
 ;; TODO: These two could further limit the task list to
@@ -157,7 +159,8 @@ a prefix argument."
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-enabled project-root task-name t)
     (when (and (called-interactively-p) (not current-prefix-arg))
-      (custode--trigger project-root (list task-name)))))
+      (custode--trigger project-root (list task-name)))
+    (message "Enabled %s task." task-name)))
 
 (defun custode-disable-task (task-name)
   "Disable a task in the current project.
@@ -173,7 +176,8 @@ enabled."
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-enabled project-root task-name nil)
     (when (and (called-interactively-p) (not current-prefix-arg))
-      (kill-buffer (custode-buffer-name project-root task-name)))))
+      (kill-buffer (custode-buffer-name project-root task-name)))
+    (message "Disabled %s task." task-name)))
 
 (defun custode-load ()
   "Load project tasks from `custode-save-file' file in project root."
@@ -182,7 +186,8 @@ enabled."
     (unless project-root
       (user-error "Not in a project"))
     (setcdr (custode--get-project project-root)
-            (custode--read-project-tasks project-root))))
+            (custode--read-project-tasks project-root))
+    (message "Loaded project tasks.")))
 
 (defun custode-save ()
   "Write project tasks to `custode-save-file' file in project root."
@@ -190,7 +195,8 @@ enabled."
   (let ((project-root (custode--current-project-root)))
     (unless project-root
       (user-error "Not in a project"))
-    (custode--write-project-tasks project-root (custode--get-current-project-task-names))))
+    (custode--write-project-tasks project-root (custode--get-current-project-task-names))
+    (message "Saved project tasks.")))
 
 (defun custode-set-buffer-positioning (task-name positioning-function)
   "Set the positioning function for the Custode buffer."
