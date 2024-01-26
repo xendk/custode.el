@@ -229,8 +229,8 @@ The ARGS is a string appended to the shell command for the
 task (with a space in between). If the string is empty, revert to
 the original task command.
 
-Interactively, run the task after enabling it, unless called with
-a prefix argument.
+Interactively, run the task after setting it, if the task is
+enabled, unless called with a prefix argument.
 
 Task arguments persists for the duration of the Emacs session."
   (interactive
@@ -246,7 +246,9 @@ Task arguments persists for the duration of the Emacs session."
     (if (equal args "")
         (setf (cdr state) (assoc-delete-all :args (cdr state)))
       (push (cons :args args) (cdr state)))
-    (when (and (called-interactively-p) (not current-prefix-arg))
+    (when (and (called-interactively-p)
+               (not current-prefix-arg)
+               (custode--task-enabled-p project-root task-name))
       (custode--trigger project-root (list task-name)))))
 
 ;;;###autoload
@@ -363,6 +365,11 @@ is `t' or `nil'."
     (if (assoc :enabled (cdr task-state))
         (setf (cdr (assoc :enabled (cdr task-state))) state)
       (push (cons :enabled state) (cdr task-state)))))
+
+(defun custode--task-enabled-p (project-root task-name)
+  "Check wether task is enabled."
+  (if (member task-name (custode--get-enabled-tasks project-root))
+      t nil))
 
 (defun custode--get-enabled-tasks (project-root)
   "Get enabled tasks for PROJECT-ROOT.

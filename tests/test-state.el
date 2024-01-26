@@ -69,6 +69,19 @@
                                   '(("project\0task1" . ((:enabled t)))
                                     ("project2\0task1" . ((:enabled t)))))))
 
+    (describe "custode--task-enabled-p"
+      (it "returns t for enabled tasks"
+        (expect (custode--task-enabled-p "project" "task1")
+                :to-be t))
+
+      (it "returns nil for disabled tasks"
+        (expect (custode--task-enabled-p "project" "task2")
+                :to-be nil))
+
+      (it "returns nil for unknown tasks"
+        (expect (custode--task-enabled-p "project" "task3")
+                :to-be nil)))
+
     (describe "custode--get-enabled-tasks"
       (it "returns enabled tasks"
         (expect (custode--get-enabled-tasks "project")
