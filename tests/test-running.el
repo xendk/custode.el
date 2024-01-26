@@ -4,6 +4,9 @@
 (require 'custode)
 
 (describe "running tasks"
+  (before-each
+    ;; Silence the load message.
+    (spy-on 'custode-load))
   (describe "custode-buffer-name"
     (it "should generate an adequate buffor name"
       (expect (custode-buffer-name "project" "task")
@@ -16,11 +19,11 @@
       (setq custode--tasks '())
       (setq custode--task-states '())
       (spy-on 'custode--current-project-root :and-return-value "unrelated")
-      (custode-create-task "task" "unrelated command")
-      (custode-enable-task "task")
+      (shut-up (custode-create-task "task" "unrelated command")
+               (custode-enable-task "task"))
       (spy-on 'custode--current-project-root :and-return-value "project")
-      (custode-create-task "task" "the command")
-      (custode-enable-task "task")
+      (shut-up (custode-create-task "task" "the command")
+               (custode-enable-task "task"))
       (spy-on 'custode--start))
 
     (it "triggers task running"
@@ -28,8 +31,8 @@
       (expect 'custode--start :to-have-been-called-with "project" "task" "the command" nil))
 
     (it "triggers multiple task running"
-      (custode-create-task "task2" "the other command")
-      (custode-enable-task "task2")
+      (shut-up (custode-create-task "task2" "the other command")
+               (custode-enable-task "task2"))
       (custode--trigger "project")
       (expect 'custode--start :to-have-been-called-with "project" "task" "the command" nil)
       (expect 'custode--start :to-have-been-called-with "project" "task2" "the other command" nil))

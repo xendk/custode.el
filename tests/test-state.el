@@ -92,7 +92,7 @@
       (it "enables tasks"
         (spy-on 'custode--current-project-root :and-return-value "project")
 
-        (custode-enable-task "task2")
+        (shut-up (custode-enable-task "task2"))
         (expect (custode--get-enabled-tasks "project")
                 :to-have-same-items-as
                 '("task2" "task1")))
@@ -113,7 +113,7 @@
         (spy-on 'custode--current-project-root :and-return-value "project")
         (spy-on 'custode--trigger)
 
-        (funcall-interactively 'custode-enable-task "task2")
+        (shut-up (funcall-interactively 'custode-enable-task "task2"))
         (expect 'custode--trigger
                 :to-have-been-called-with
                 "project" '("task2")))
@@ -123,7 +123,7 @@
         (spy-on 'custode--trigger)
 
         (let ((current-prefix-arg '(4)))
-          (funcall-interactively 'custode-enable-task "task2"))
+          (shut-up (funcall-interactively 'custode-enable-task "task2")))
         (expect 'custode--trigger
                 :not :to-have-been-called
                 )))
@@ -131,7 +131,7 @@
     (describe "custode-disable-task"
       (it "disables tasks"
         (spy-on 'custode--current-project-root :and-return-value "project")
-        (custode-disable-task "task1")
+        (shut-up (custode-disable-task "task1"))
         (expect (custode--get-enabled-tasks "project")
                 :to-have-same-items-as
                 '()))
@@ -150,7 +150,7 @@
         (spy-on 'custode--current-project-root :and-return-value "project")
         (let ((buffer-name (custode-buffer-name "project" "task1")))
           (get-buffer-create buffer-name)
-          (funcall-interactively 'custode-disable-task "task1")
+          (shut-up (funcall-interactively 'custode-disable-task "task1"))
           (expect (get-buffer buffer-name)
                   :to-be nil)))
 
@@ -159,7 +159,7 @@
         (let ((buffer-name (custode-buffer-name "project" "task1")))
           (get-buffer-create buffer-name)
           (let ((current-prefix-arg '(4)))
-            (funcall-interactively 'custode-disable-task "task1"))
+            (shut-up (funcall-interactively 'custode-disable-task "task1")))
           (expect (get-buffer buffer-name)
                   :not :to-be nil)))))
 

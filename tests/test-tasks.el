@@ -6,7 +6,9 @@
 (describe "task management"
   :var (custode--tasks)
   (before-each
-    (setq custode--tasks '()))
+    (setq custode--tasks '())
+    ;; Silence the load message.
+    (spy-on 'custode-load))
 
   (describe "custode--current-project-root"
     (describe "without a project"
@@ -28,8 +30,8 @@
   (describe "custode--get-project"
     (it "returns the requested project"
       (spy-on 'custode--current-project-root :and-return-value "project")
-      (custode-create-task "task1" "task one")
-      (custode-create-task "task2" "task two")
+      (shut-up (custode-create-task "task1" "task one")
+               (custode-create-task "task2" "task two"))
 
       (expect (custode--get-project "project")
               :to-have-same-items-as
@@ -44,13 +46,13 @@
   (describe "custode-create-task"
     (it "should add tasks to current project"
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
-      (custode-create-task "the-task" "the command")
+      (shut-up (custode-create-task "the-task" "the command"))
       (expect custode--tasks
               :to-equal
               '(("the-project/" .
                  (("the-task" . ((:task . "the command")))))))
 
-      (custode-create-task "another-task" "another command")
+      (shut-up (custode-create-task "another-task" "another command"))
       (expect (cdr (assoc "the-project/" custode--tasks))
               :to-have-same-items-as
               '(("the-task" . ((:task . "the command")))
@@ -65,10 +67,10 @@
     (before-each
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
       (spy-on 'yes-or-no-p :and-return-value t)
-      (custode-create-task "the-task" "the command"))
+      (shut-up (custode-create-task "the-task" "the command")))
 
     (it "should remove tasks from current project"
-      (custode-delete-task "the-task")
+      (shut-up (custode-delete-task "the-task"))
       (expect (cdr (assoc "the-project/" custode--tasks))
               :to-have-same-items-as
               '())))
@@ -76,7 +78,7 @@
   (describe "custode-set-buffer-positioning"
     (before-each
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
-      (custode-create-task "the-task" "the command"))
+      (shut-up (custode-create-task "the-task" "the command")))
 
     (it "sets the buffer positioning"
       (custode-set-buffer-positioning "the-task" 'custode--position-buffer-end)

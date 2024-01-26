@@ -7,4 +7,4 @@
 
 (eldev-use-plugin 'undercover)
 (eldev-use-plugin 'autoloads)
-(eldev-add-extra-dependencies 'test 'assess 'compat)
+(eldev-add-extra-dependencies 'test 'assess 'compat 'shut-up)
