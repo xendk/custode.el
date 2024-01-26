@@ -448,14 +448,18 @@ POSITION-FUNCTION is a function that positions the buffer afterwards."
       (force-mode-line-update t))))
 
 (defun custode--write-project-tasks (project-root tasks)
-  "Write project task to `custode-save-file' file in PROJECT-ROOT."
+  "Write project task to `custode-save-file' file in PROJECT-ROOT.
+
+Deletes the file if no tasks is defined."
   (let ((filename (concat (file-name-as-directory project-root) custode-save-file)))
-    (with-temp-buffer
-      (insert ";;; -*- lisp-data -*-\n")
-      (let ((print-length nil)
-            (print-level nil))
-        (pp tasks (current-buffer)))
-      (write-region nil nil filename nil 'silent))))
+    (if tasks
+        (with-temp-buffer
+          (insert ";;; -*- lisp-data -*-\n")
+          (let ((print-length nil)
+                (print-level nil))
+            (pp tasks (current-buffer)))
+          (write-region nil nil filename nil 'silent))
+      (delete-file filename))))
 
 (defun custode--read-project-tasks (project-root)
   "Read project tasks from `custode-save-file' file in PROJECT-ROOT."

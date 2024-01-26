@@ -25,9 +25,34 @@
  (\"task2\"
   (:task . \"task two\")
   (:positioning-function . custode--position-buffer-end)))
-")
-        )
-      ))
+")))
+
+    (it "deletes the file if no tasks"
+      (assess-with-filesystem
+       (list (list custode-save-file ";;; -*- lisp-data -*-
+((\"task1\"
+  (:task . \"task one\"))
+ (\"task2\"
+  (:task . \"task two\")
+  (:positioning-function . custode--position-buffer-end))
+ (\"task3\"
+  (:invalid . \"task three\")))
+"))
+       (setq tasks '())
+       (custode--write-project-tasks default-directory tasks)
+
+       (expect (file-exists-p (concat (file-name-as-directory default-directory) custode-save-file))
+               :to-equal
+               nil)))
+    (it "quietly handles if the file doesn't exist"
+      (assess-with-filesystem
+       '()
+       (setq tasks '())
+       (custode--write-project-tasks default-directory tasks)
+
+       (expect (file-exists-p (concat (file-name-as-directory default-directory) custode-save-file))
+               :to-equal
+               nil))))
 
   (describe "custode--read-project-tasks"
     (it "reads the file"
