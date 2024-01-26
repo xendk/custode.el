@@ -229,6 +229,9 @@ The ARGS is a string appended to the shell command for the
 task (with a space in between). If the string is empty, revert to
 the original task command.
 
+Interactively, run the task after enabling it, unless called with
+a prefix argument.
+
 Task arguments persists for the duration of the Emacs session."
   (interactive
    (let ((task-name (custode--completing-read-task)))
@@ -237,11 +240,14 @@ Task arguments persists for the duration of the Emacs session."
       (read-string "Task args: "
                    (custode--get-task-args (custode--current-project-root) task-name)
                    'consult-args-history))))
-  (let ((args (string-trim args))
-        (state (custode--get-task-state (custode--current-project-root) task-name)))
+  (let* ((args (string-trim args))
+         (project-root (custode--current-project-root))
+         (state (custode--get-task-state project-root task-name)))
     (if (equal args "")
         (setf (cdr state) (assoc-delete-all :args (cdr state)))
-      (push (cons :args args) (cdr state)))))
+      (push (cons :args args) (cdr state)))
+    (when (and (called-interactively-p) (not current-prefix-arg))
+      (custode--trigger project-root (list task-name)))))
 
 ;;;###autoload
 (define-minor-mode custode-mode
