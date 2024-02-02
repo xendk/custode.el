@@ -294,8 +294,18 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
       (funcall custode-position-function buffer))))
 
 (defun custode--position-buffer-end (buffer)
-  "Position BUFFER at the end."
-  (set-window-point (get-buffer-window buffer t) (point-max)))
+  "Position BUFFER at the end.
+
+Attempts to position the point so the last line is at the bottom
+of the window."
+  (let* ((window (get-buffer-window buffer t))
+         (new-point (save-excursion
+                      (with-current-buffer buffer
+                        (goto-char (point-max))
+                        (vertical-motion (- (floor (/ (window-height window) 2))))
+                        (point)))))
+    (message "%S" new-point)
+    (set-window-point window new-point)))
 
 (defun custode--position-buffer-beginning (buffer)
   "Position BUFFER at the beginning."

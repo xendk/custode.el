@@ -119,19 +119,33 @@
            (custode--start "project" "task" "false" 'custode--position-buffer-end)
            (wait-for-custode-tasks)
 
-           (with-current-buffer (get-buffer (custode-buffer-name "project" "task"))
-             (expect (window-point (get-buffer-window (current-buffer)))
-                     :to-equal
-                     (point-max)))))
+           (let* ((buffer (get-buffer (custode-buffer-name "project" "task")))
+                  (window (get-buffer-window buffer))
+                  (expected-point (save-excursion
+                                    (with-current-buffer buffer
+                                      (goto-char (point-max))
+                                      (vertical-motion (- (floor (/ (window-height window) 2))))
+                                      (point)))))
+             (with-current-buffer buffer
+               (expect (window-point window)
+                       :to-equal
+                       expected-point)))))
 
         (it "shows the end of the buffer, on reruns"
-          (assess-with-preserved-buffer-list
-           (custode--start "project" "task" "false" 'custode--position-buffer-end)
-           (wait-for-custode-tasks)
-           (custode--start "project" "task" "false" 'custode--position-buffer-end)
-           (wait-for-custode-tasks)
+            (assess-with-preserved-buffer-list
+             (custode--start "project" "task" "false" 'custode--position-buffer-end)
+             (wait-for-custode-tasks)
+             (custode--start "project" "task" "false" 'custode--position-buffer-end)
+             (wait-for-custode-tasks)
 
-           (with-current-buffer (get-buffer (custode-buffer-name "project" "task"))
-             (expect (window-point (get-buffer-window (current-buffer)))
-                     :to-equal
-                     (point-max)))))))))
+             (let* ((buffer (get-buffer (custode-buffer-name "project" "task")))
+                    (window (get-buffer-window buffer))
+                    (expected-point (save-excursion
+                                      (with-current-buffer buffer
+                                        (goto-char (point-max))
+                                        (vertical-motion (- (floor (/ (window-height window) 2))))
+                                        (point)))))
+               (with-current-buffer buffer
+                 (expect (window-point window)
+                         :to-equal
+                         expected-point)))))))))
