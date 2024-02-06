@@ -108,6 +108,19 @@ These functions are called with the buffer as the only argument"
   :group 'custode
   :type '(repeat function))
 
+(defgroup custode-faces nil
+  "Faces used by `custode-mode'."
+  :group 'custode
+  :group 'faces)
+
+(defface custode-task-command
+  '((t :inherit completions-annotations))
+  "Face used to highlight command in completion.")
+
+(defface custode-task-args
+  '((t :inherit (completions-common-part italic)))
+  "Face used to highlight command arguments in completion.")
+
 (defun custode-buffer-name (project-root task-name)
   "Get the buffer name for the TASK-NAME task in PROJECT-ROOT project."
   (concat " *custode " project-root " " task-name "*"))
@@ -403,7 +416,29 @@ Returns a list of task-names."
   "Use `completing-read' to read a task in the current project."
   (unless (custode--current-project-root)
     (user-error "Not in a project"))
-  (completing-read "Task: " (custode--get-current-project-task-names) nil t))
+  (completing-read "Task: " #'custode--task-completion-table nil t))
+
+(defun custode--task-completion-table (str pred flag)
+  "Completion table for custode tasks."
+  (pcase flag
+    ('metadata '(metadata (category . 'custode-task)
+                          (affixation-function . custode--task-completion-table-affixation)))
+    (_ (all-completions str (custode--get-current-project-task-names) pred))))
+
+(defun custode--task-completion-table-affixation (completions)
+  (mapcar (lambda (c)
+            (let* ((project-root (custode--current-project-root))
+                   (tasks (cdr (custode--get-project project-root)))
+                   (task (cdr (assoc c tasks)))
+                   (command (cdr (assoc :task task)))
+                   (args (custode--get-task-args project-root c)))
+              (list c "" (concat
+                          (propertize
+                           (format " -- %s " command)
+                           'face 'custode-task-command)
+                          (when args
+                            (propertize args 'face 'custode-task-args))))))
+          completions))
 
 (defun custode--trigger (project-root &optional tasks)
   "Trigger tasks on PROJECT-ROOT.

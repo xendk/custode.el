@@ -19,3 +19,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trigger tasks when enabled interactively, unless called with prefix
   arg.
 - Deletes task buffer when disabling tasks.
+- Annotate tasks completions with task command.
