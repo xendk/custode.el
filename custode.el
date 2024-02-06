@@ -250,7 +250,7 @@ Task arguments persists for the duration of the Emacs session."
    (let ((task-name (custode--completing-read-task)))
      (list
       task-name
-      (read-string "Task args: "
+      (read-string "Task arguments: "
                    (custode--get-task-args (custode--current-project-root) task-name)
                    'consult-args-history))))
   (let* ((args (string-trim args))
@@ -408,7 +408,7 @@ Returns a list of task-names."
     enabled-tasks))
 
 (defun custode--get-task-args (project-root task-name)
-  "Get the currently set args for the PROJECT-ROOT TASK-NAME."
+  "Get the currently set arguments for the PROJECT-ROOT TASK-NAME."
   (let ((state (custode--get-task-state project-root task-name)))
     (cdr (assoc :args (cdr state)))))
 
