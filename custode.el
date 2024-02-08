@@ -144,7 +144,7 @@ to enable it."
   "Delete a task from the current project."
   (interactive
    (list
-    (custode--completing-read-task)))
+    (custode--completing-read-task "Delete task")))
   (if (yes-or-no-p (format "Really delete task %s? " task-name))
       (let* ((project-root (custode--current-project-root))
              (project (custode--get-project project-root)))
@@ -168,7 +168,7 @@ Interactively, run the task after enabling it, unless called with
 a prefix argument."
   (interactive
    (list
-    (custode--completing-read-task)))
+    (custode--completing-read-task "Enable task")))
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-enabled project-root task-name t)
     (when (and (called-interactively-p) (not current-prefix-arg))
@@ -185,7 +185,7 @@ loaded from `custode-save-file' will be disabled until manually
 enabled."
   (interactive
    (list
-    (custode--completing-read-task)))
+    (custode--completing-read-task "Disable task")))
   (let ((project-root (custode--current-project-root)))
     (custode--set-task-enabled project-root task-name nil)
     (when (and (called-interactively-p) (not current-prefix-arg))
@@ -215,7 +215,7 @@ enabled."
   "Set the positioning function for the Custode buffer."
   (interactive
    (list
-    (custode--completing-read-task)
+    (custode--completing-read-task "Set buffer positioning for")
     (intern (completing-read "Positioning function: "
                              (mapcar 'symbol-name custode-buffer-positioning-functions)
                              nil t))))
@@ -247,7 +247,7 @@ enabled, unless called with a prefix argument.
 
 Task arguments persists for the duration of the Emacs session."
   (interactive
-   (let ((task-name (custode--completing-read-task)))
+   (let ((task-name (custode--completing-read-task "Set task arguments for")))
      (list
       task-name
       (read-string "Task arguments: "
@@ -412,11 +412,11 @@ Returns a list of task-names."
   (let ((state (custode--get-task-state project-root task-name)))
     (cdr (assoc :args (cdr state)))))
 
-(defun custode--completing-read-task ()
+(defun custode--completing-read-task (prompt)
   "Use `completing-read' to read a task in the current project."
   (unless (custode--current-project-root)
     (user-error "Not in a project"))
-  (completing-read "Task: " #'custode--task-completion-table nil t))
+  (completing-read (concat prompt ": ") #'custode--task-completion-table nil t))
 
 (defun custode--task-completion-table (str pred flag)
   "Completion table for custode tasks."
