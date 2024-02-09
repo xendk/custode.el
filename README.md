@@ -1,6 +1,6 @@
 # Custode
 
-Custode is a "file watcher" for Emacs that runs tasks in the
+Custode is a "file watcher" for Emacs that runs commands in the
 background, and only pops up when a command fails.
 
 Automatically running build or tests when saving files has been
@@ -9,11 +9,11 @@ keep an eye on a shell window (or buffer), in order to make sure you
 didn't break something.
 
 Custode does it a bit differently:
-* It runs task on file save in Emacs. 99% of the time, this is what
-  one needs, and for the last 1% there's still the excellent
+* It runs commands on file save in Emacs. 99% of the time, this is
+  what one needs, and for the last 1% there's still the excellent
   [entr](https://github.com/eradman/entr).
-* It doesn't show any output per default, but only pops up the task
-  buffer when the task failed.
+* It doesn't show any output per default, but only pops up the output
+  buffer when the command failed.
 
 While having a build/test window more or less permanently scrolling
 does gives a nice "Matrix hacker" feel to developing, it is probably
@@ -63,33 +63,31 @@ In a buffer visiting a file that is part of a project recognized by
 `project`, you'll have the following commands available on the prefix
 you configured:
 
-* `c`: Create a new task for the project. The task name is purely for
-  identification, you can call it whatever you want, and the command
-  should be a command that can be run by the shell. New tasks always
-  starts out disabled, so adding a task wont make anything happen in
-  itself.
-* `k`: Remove a task.
-* `e`: Enable a task. This makes custode run this task whenever saving
-  a file in the project. When run interactively, this will also
-  trigger the task (can be suppressed with a prefix orgument). 
-* `d`: Disable a task. Stops a task from running automatically again.
-  Interactively, this will also delete the task buffer, unless called
-  with a prefix argument.
-* `a`: Set task arguments. When arguments has been set, they're added
-  to the shell command when the task run. A use case is temporarily
+* `c`: Create a new command for the project. The command should be a
+  command that can be run by the shell. New commands always starts out
+  disabled, so adding a command wont make anything happen in itself.
+* `k`: Remove a command.
+* `e`: Enable a command. This makes custode run this task whenever
+  saving a file in the project. When run interactively, this will also
+  trigger the command (can be suppressed with a prefix argument).
+* `d`: Disable a command. Stops a command from running automatically
+  again. Interactively, this will also delete the output buffer,
+  unless called with a prefix argument.
+* `a`: Set command arguments. When arguments has been set, they're
+  added to the shell command when run. A use case is temporarily
   adding arguments to a test command to only run a subset of tests.
   Note that arguments only persist in the current Emacs session,
   they're not saved to the configuration file. Arguments can be unset
-  by supplying an empty string to this command.
-* `l`: Loads tasks from the configuration file (`.custode` per
+  by supplying an empty string.
+* `l`: Loads commands from the configuration file (`.custode` per
   default, can be configured with the `custode-save-file` custom
   option) in the root of the project. This should seldom be needed as
-  tasks are automatically loaded on project discovery.
+  cammands are automatically loaded on project discovery.
 * `s`: Saves configuration to the configuration file in the project
   root.
-* `p`: Select how to position the buffer when the task has run.
-  Depending on the run command, start or end of buffer might be most
-  appropriate. This is saved with the configuration.
+* `p`: Select how to position the output buffer when the command has
+  run and failed. Depending on the run command, start or end of buffer
+  might be most appropriate. This is saved with the configuration.
 
 
 # Recommended configuration

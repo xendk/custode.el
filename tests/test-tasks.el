@@ -30,47 +30,47 @@
   (describe "custode--get-project"
     (it "returns the requested project"
       (spy-on 'custode--current-project-root :and-return-value "project")
-      (shut-up (custode-create-task "task1" "task one")
-               (custode-create-task "task2" "task two"))
+      (shut-up (custode-create-task "task1")
+               (custode-create-task "task2"))
 
       (expect (custode--get-project "project")
               :to-have-same-items-as
-              '("project" . (("task1" . ((:task . "task one")))
-                             ("task2" . ((:task . "task two")))))))
+              '("project" . (("task1" . ())
+                             ("task2" . ())))))
 
     (it "creates project on unknown root"
-      (expect (custode--get-project "banana")
-              :to-have-same-items-as
-              '("banana") . ())))
+        (expect (custode--get-project "banana")
+                :to-have-same-items-as
+                '("banana") . ())))
 
   (describe "custode-create-task"
     (it "should add tasks to current project"
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
-      (shut-up (custode-create-task "the-task" "the command"))
+      (shut-up (custode-create-task "the command"))
       (expect custode--tasks
               :to-equal
               '(("the-project/" .
-                 (("the-task" . ((:task . "the command")))))))
+                 (("the command" . ())))))
 
-      (shut-up (custode-create-task "another-task" "another command"))
+      (shut-up (custode-create-task "another command"))
       (expect (cdr (assoc "the-project/" custode--tasks))
               :to-have-same-items-as
-              '(("the-task" . ((:task . "the command")))
-                ("another-task" . ((:task . "another command"))))))
+              '(("the command" . ())
+                ("another command" . ()))))
 
     (it "errors when no project is active"
       (spy-on 'custode--current-project-root :and-return-value nil)
-      (expect (custode-create-task "the-task" "the command")
+      (expect (custode-create-task "the command")
               :to-throw 'error)))
 
   (describe "custode-delete-task"
     (before-each
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
       (spy-on 'yes-or-no-p :and-return-value t)
-      (shut-up (custode-create-task "the-task" "the command")))
+      (shut-up (custode-create-task "the command")))
 
     (it "should remove tasks from current project"
-      (shut-up (custode-delete-task "the-task"))
+      (shut-up (custode-delete-task "the command"))
       (expect (cdr (assoc "the-project/" custode--tasks))
               :to-have-same-items-as
               '())))
@@ -78,17 +78,16 @@
   (describe "custode-set-buffer-positioning"
     (before-each
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
-      (shut-up (custode-create-task "the-task" "the command")))
+      (shut-up (custode-create-task "the command")))
 
     (it "sets the buffer positioning"
-      (custode-set-buffer-positioning "the-task" 'custode--position-buffer-end)
-      (expect (cdr (assoc "the-task" (cdr (assoc "the-project/" custode--tasks))))
+      (custode-set-buffer-positioning "the command" 'custode--position-buffer-end)
+      (expect (cdr (assoc "the command" (cdr (assoc "the-project/" custode--tasks))))
               :to-have-same-items-as
-              '((:task . "the command")
-                (:positioning-function . custode--position-buffer-end))))
+              '((:positioning-function . custode--position-buffer-end))))
 
     ;; Can only happen when called from Lisp.
     (it "errors on invalid positioning"
-      (expect (custode-set-buffer-positioning "the-task" 'banana)
+      (expect (custode-set-buffer-positioning "the command" 'banana)
               :to-throw 'error)))
   )

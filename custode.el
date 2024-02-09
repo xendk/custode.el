@@ -89,7 +89,7 @@ The value of this variable is a mode line template as in
 (put 'custode-lighter 'risky-local-variable t)
 
 (defvar custode-position-function
-  "Function to call to position task buffer.
+  "Function to call to position output buffer.
 
 Automatically set in relevant buffers by custode--start.")
 
@@ -121,97 +121,94 @@ These functions are called with the buffer as the only argument"
   '((t :inherit (completions-common-part italic)))
   "Face used to highlight command arguments in completion.")
 
-(defun custode-buffer-name (project-root task-name)
-  "Get the buffer name for the TASK-NAME task in PROJECT-ROOT project."
-  (concat " *custode " project-root " " task-name "*"))
+(defun custode-buffer-name (project-root command)
+  "Get the buffer name for the COMMAND in PROJECT-ROOT project."
+  (concat " *custode " project-root " " command "*"))
 
-(defun custode-create-task (task-name command)
-  "Add a task to the current project.
+(defun custode-create-task (command)
+  "Add a command to the current project.
 
-The NAME is purely an identifier, you can use any name you find
-appropiate. COMMAND is the command passed to the shell to run.
-Initially the command will be disabled, use `custode-enable-task'
-to enable it."
-  (interactive "sTask: \nsCommand: ")
+COMMAND is a command passed to the shell to run. Initially the
+command will be disabled, use `custode-enable-task' to enable
+it."
+  (interactive "sCommand: ")
   (let ((project-root (custode--current-project-root)))
     (unless project-root
       (user-error "Not in a project"))
     (let ((project (custode--get-project project-root)))
-      (push (cons task-name (list (cons :task command))) (cdr project))
-      (message "Created %s task." task-name))))
+      (push (cons command '()) (cdr project))
+      (message "Created \"%s\"" command))))
 
-(defun custode-delete-task (task-name)
+(defun custode-delete-task (command)
   "Delete a task from the current project."
   (interactive
    (list
-    (custode--completing-read-task "Delete task")))
-  (if (yes-or-no-p (format "Really delete task %s? " task-name))
+    (custode--completing-read-task "Delete command")))
+  (if (yes-or-no-p (format "Really delete \"%s\"? " command))
       (let* ((project-root (custode--current-project-root))
              (project (custode--get-project project-root)))
-        (setcdr project (assoc-delete-all task-name (cdr project)))
-        (message "Deleted %s task." task-name))
-    (message "Task not deleted")))
+        (setcdr project (assoc-delete-all command (cdr project)))
+        (message "Deleted \"%s\"" command))
+    (message "Command not deleted")))
 
-;; TODO: These two could further limit the task list to
-;; enabled/disabled tasks.
-(defun custode-enable-task (task-name)
-  "Enable a task in the current project.
+(defun custode-enable-task (command)
+  "Enable COMMAND in the current project.
 
-Enabled tasks will automatically run when files in the project is
-saved.
+Enabled commands will automatically run when files in the project
+is saved.
 
-Initially, all tasks, whether added with `custode-create-task' or
-loaded from `custode-save-file' will be disabled until manually
-enabled.
+Initially, all commands, whether added with `custode-create-task'
+or loaded from `custode-save-file' will be disabled until
+manually enabled.
 
-Interactively, run the task after enabling it, unless called with
+Interactively, run the command after enabling it, unless called with
 a prefix argument."
   (interactive
    (list
-    (custode--completing-read-task "Enable task")))
+    (custode--completing-read-task "Enable")))
   (let ((project-root (custode--current-project-root)))
-    (custode--set-task-enabled project-root task-name t)
+    (custode--set-task-enabled project-root command t)
     (when (and (called-interactively-p) (not current-prefix-arg))
-      (custode--trigger project-root (list task-name)))
-    (message "Enabled %s task." task-name)))
+      (custode--trigger project-root (list command)))
+    (message "Enabled \"%s\"" command)))
 
-(defun custode-disable-task (task-name)
-  "Disable a task in the current project.
+(defun custode-disable-task (command)
+  "Disable COMMAND in the current project.
 
-Disabled tasks will not be run when project files are saved.
+Disabled commands will not be run when project files are saved.
 
-Initially, all tasks, whether added with `custode-create-task' or
-loaded from `custode-save-file' will be disabled until manually
-enabled."
+Initially, all commands, whether added with `custode-create-task'
+or loaded from `custode-save-file' will be disabled until
+manually enabled."
   (interactive
    (list
-    (custode--completing-read-task "Disable task")))
+    (custode--completing-read-task "Disable")))
   (let ((project-root (custode--current-project-root)))
-    (custode--set-task-enabled project-root task-name nil)
+    (custode--set-task-enabled project-root command nil)
     (when (and (called-interactively-p) (not current-prefix-arg))
-      (kill-buffer (custode-buffer-name project-root task-name)))
-    (message "Disabled %s task." task-name)))
+      (kill-buffer (custode-buffer-name project-root command)))
+    (message "Disabled \"%s\"" command)))
 
 (defun custode-load ()
-  "Load project tasks from `custode-save-file' file in project root."
+  "Load project commands from `custode-save-file' file in project root."
   (interactive)
   (let ((project-root (custode--current-project-root)))
     (unless project-root
       (user-error "Not in a project"))
     (setcdr (custode--get-project project-root)
             (custode--read-project-tasks project-root))
-    (message "Loaded project tasks.")))
+    (message "Loaded project commands.")))
 
 (defun custode-save ()
-  "Write project tasks to `custode-save-file' file in project root."
+  "Write project commands to `custode-save-file' file in project root."
   (interactive)
   (let ((project-root (custode--current-project-root)))
     (unless project-root
       (user-error "Not in a project"))
     (custode--write-project-tasks project-root (custode--get-current-project-task-names))
-    (message "Saved project tasks.")))
+    (message "Saved project commands")))
 
-(defun custode-set-buffer-positioning (task-name positioning-function)
+(defun custode-set-buffer-positioning (command positioning-function)
   "Set the positioning function for the Custode buffer."
   (interactive
    (list
@@ -224,49 +221,49 @@ enabled."
   (let* ((project-root (custode--current-project-root))
          (project-tasks (or (cdr (custode--get-project project-root))
                             (error "Unknown project %s" project-root)))
-         (task (assoc task-name project-tasks)))
+         (task (assoc command project-tasks)))
     (unless task
-      (error "Unknown task %s" task-name))
+      (error "Unknown command \"%s\"" command))
     (if (assoc :positioning-function (cdr task))
         (setf (cdr (assoc :positioning-function (cdr task))) positioning-function)
       (push (cons :positioning-function positioning-function) (cdr task)))))
 
-(defun custode-set-task-args (task-name args)
-  "Set/unset command arguments for TASK-NAME in the current project.
+(defun custode-set-task-args (command args)
+  "Set/unset command arguments for COMMAND in the current project.
 
 This is, for instance, useful for temporarily focusing tests on
 specific test cases, by supplying the test command with the
 appropriate arguments for only running those tests.
 
 The ARGS is a string appended to the shell command for the
-task (with a space in between). If the string is empty, revert to
-the original task command.
+command (with a space in between). If the string is empty, revert
+to the original command without any further arguments.
 
-Interactively, run the task after setting it, if the task is
-enabled, unless called with a prefix argument.
+Interactively, run the command after setting it, if the command
+is enabled, unless called with a prefix argument.
 
-Task arguments persists for the duration of the Emacs session."
+Command arguments persists for the duration of the Emacs session."
   (interactive
-   (let ((task-name (custode--completing-read-task "Set task arguments for")))
+   (let ((command (custode--completing-read-task "Set arguments for")))
      (list
-      task-name
-      (read-string "Task arguments: "
-                   (custode--get-task-args (custode--current-project-root) task-name)
+      command
+      (read-string "Command arguments: "
+                   (custode--get-task-args (custode--current-project-root) command)
                    'consult-args-history))))
   (let* ((args (string-trim args))
          (project-root (custode--current-project-root))
-         (state (custode--get-task-state project-root task-name)))
+         (state (custode--get-task-state project-root command)))
     (if (equal args "")
         (setf (cdr state) (assoc-delete-all :args (cdr state)))
       (push (cons :args args) (cdr state)))
     (when (and (called-interactively-p)
                (not current-prefix-arg)
-               (custode--task-enabled-p project-root task-name))
-      (custode--trigger project-root (list task-name)))))
+               (custode--task-enabled-p project-root command))
+      (custode--trigger project-root (list command)))))
 
 ;;;###autoload
 (define-minor-mode custode-mode
-  "Minor mode for running tasks on file save."
+  "Minor mode for running commands on file save."
   :lighter custode-lighter
   :group 'custode
   :init-value nil
@@ -302,7 +299,7 @@ BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
           (unless (< (length (window-list (window-frame buffer-window))) 2)
             (delete-window buffer-window)))
       (unless buffer-window
-        ;; Display buffer if task failed.
+        ;; Display buffer if command failed.
         (display-buffer buffer))
       (funcall custode-position-function buffer))))
 
@@ -327,7 +324,7 @@ of the window."
 (defun custode--after-save-hook ()
   "After save hook for custode-mode.
 
-Triggers running enabled tasks if the file is in a project."
+Triggers running enabled commands if the file is in a project."
   (let ((project-root (custode--current-project-root)))
     (when project-root
       (custode--trigger project-root))))
@@ -338,11 +335,11 @@ Triggers running enabled tasks if the file is in a project."
     (when current-project
       (project-root current-project))))
 
-(defun custode--get-task-state (project-root task)
-  "Returns task state for PROJECT-ROOT and TASK.
+(defun custode--get-task-state (project-root command)
+  "Returns COMMAND state for PROJECT-ROOT.
 
 Creates the state if not found."
-  (let ((key (concat project-root "\0" task)))
+  (let ((key (concat project-root "\0" command)))
     (unless (assoc key custode--task-states)
       (let ((val (copy-tree '())))
         (push (cons key val) custode--task-states)))
@@ -362,7 +359,7 @@ Creates the state if not found."
 
 Adds PROJECT-ROOT to the list of projects if not found.
 
-Returns (PROJECT-ROOT . TASKS)."
+Returns (PROJECT-ROOT . COMMANDS)."
   (unless (assoc project-root custode--tasks)
     (push (cons project-root '()) custode--tasks)
     (custode-load))
@@ -374,30 +371,30 @@ Returns (PROJECT-ROOT . TASKS)."
     (when project-root
       (cdr (custode--get-project project-root)))))
 
-(defun custode--set-task-enabled (project-root task-name state)
-  "Set tasks enabled' state.
+(defun custode--set-task-enabled (project-root command state)
+  "Set tasks enabled state.
 
-PROJECT-ROOT is the project root, TASK-NAME is the task name and STATE
-is `t' or `nil'."
+PROJECT-ROOT is the project root, COMMAND is the task name and
+STATE is `t' or `nil'."
   (let* ((project-tasks (or (cdr (custode--get-project project-root))
                             (error "Unknown project %s" project-root)))
-         (task (assoc task-name project-tasks))
-         (task-state (custode--get-task-state project-root task-name)))
+         (task (assoc command project-tasks))
+         (task-state (custode--get-task-state project-root command)))
     (unless task
-      (error "Unknown task %s" task-name))
+      (error "Unknown command \"%s\"" command))
     (if (assoc :enabled (cdr task-state))
         (setf (cdr (assoc :enabled (cdr task-state))) state)
       (push (cons :enabled state) (cdr task-state)))))
 
-(defun custode--task-enabled-p (project-root task-name)
-  "Check wether task is enabled."
-  (if (member task-name (custode--get-enabled-tasks project-root))
+(defun custode--task-enabled-p (project-root command)
+  "Check whether command is enabled."
+  (if (member command (custode--get-enabled-tasks project-root))
       t nil))
 
 (defun custode--get-enabled-tasks (project-root)
-  "Get enabled tasks for PROJECT-ROOT.
+  "Get enabled commands for PROJECT-ROOT.
 
-Returns a list of task-names."
+Returns a list of commands."
   (let ((project-tasks (alist-get project-root custode--tasks nil nil 'equal))
         (enabled-tasks (list)))
     (if project-tasks
@@ -407,19 +404,19 @@ Returns a list of task-names."
       )
     enabled-tasks))
 
-(defun custode--get-task-args (project-root task-name)
-  "Get the currently set arguments for the PROJECT-ROOT TASK-NAME."
-  (let ((state (custode--get-task-state project-root task-name)))
+(defun custode--get-task-args (project-root command)
+  "Get the currently set arguments for the PROJECT-ROOT COMMAND."
+  (let ((state (custode--get-task-state project-root command)))
     (cdr (assoc :args (cdr state)))))
 
 (defun custode--completing-read-task (prompt)
-  "Use `completing-read' to read a task in the current project."
+  "Use `completing-read' to read a command in the current project."
   (unless (custode--current-project-root)
     (user-error "Not in a project"))
   (completing-read (concat prompt ": ") #'custode--task-completion-table nil t))
 
 (defun custode--task-completion-table (str pred flag)
-  "Completion table for custode tasks."
+  "Completion table for custode commands."
   (pcase flag
     ('metadata '(metadata (category . 'custode-task)
                           (affixation-function . custode--task-completion-table-affixation)))
@@ -429,8 +426,7 @@ Returns a list of task-names."
   (mapcar (lambda (c)
             (let* ((project-root (custode--current-project-root))
                    (tasks (cdr (custode--get-project project-root)))
-                   (task (cdr (assoc c tasks)))
-                   (command (cdr (assoc :task task)))
+                   (command (car (assoc c tasks)))
                    (args (custode--get-task-args project-root c)))
               (list c "" (concat
                           (propertize
@@ -440,32 +436,27 @@ Returns a list of task-names."
                             (propertize args 'face 'custode-task-args))))))
           completions))
 
-(defun custode--trigger (project-root &optional tasks)
-  "Trigger tasks on PROJECT-ROOT.
+(defun custode--trigger (project-root &optional commands)
+  "Trigger commands on PROJECT-ROOT.
 
-Optionally supply TASKS to trigger these specific tasks,
+Optionally supply COMMANDS to trigger these specific commands,
 regardless of whether they're enabled or not."
-  (let ((tasks (cdr (custode--get-project project-root)))
-        (trigger-tasks (or tasks (custode--get-enabled-tasks project-root)))
+  (let ((commands (cdr (custode--get-project project-root)))
+        (trigger-tasks (or commands (custode--get-enabled-tasks project-root)))
         (default-directory project-root))
-    (dolist (task-name trigger-tasks)
-      (let* ((task (cdr (assoc task-name tasks)))
-             (command (cdr (assoc :task task)))
+    (dolist (command trigger-tasks)
+      (let* ((task (cdr (assoc command commands)))
              (positioning-function (cdr (assoc :positioning-function task)))
-             (args (custode--get-task-args project-root task-name)))
-        (custode--start project-root task-name
-                        (if args
-                            (concat command " " args)
-                          command)
-                        positioning-function)))))
+             (args (custode--get-task-args project-root command)))
+        (custode--start project-root command args positioning-function)))))
 
-(defun custode--start (project-root task-name command &optional position-function)
-  "Start TASK-NAME in PROJECT-ROOT with COMMAND.
+(defun custode--start (project-root command &optional args position-function)
+  "Start COMMAND in PROJECT-ROOT, optionally with ARGS arguments.
 
 POSITION-FUNCTION is a function that positions the buffer afterwards."
   (interactive)
-  (let* (;; We need different buffers per project/task.
-         (buffer-name (custode-buffer-name project-root task-name))
+  (let* (;; We need different buffers per project/command.
+         (buffer-name (custode-buffer-name project-root command))
          (buffer-name-func #'(lambda (_name-of-mode)
                                buffer-name)))
     (let* (;; Don't show the buffer per default.
@@ -481,7 +472,9 @@ POSITION-FUNCTION is a function that positions the buffer afterwards."
            (compilation-always-kill t))
       ;; `compile' attempts to save buffers, so we'll
       ;; go directly to `compilation-start'.
-      (let* ((buffer (compilation-start command 'custode-task-mode))
+      (let* ((buffer (compilation-start (if args (concat command " " args)
+                                          command)
+                                        'custode-task-mode))
              (project-state (custode--get-project-state project-root)))
         (if (assoc :running (cdr project-state))
             (setcdr (assoc :running (cdr project-state))
@@ -492,46 +485,46 @@ POSITION-FUNCTION is a function that positions the buffer afterwards."
                       (or position-function 'custode--position-buffer-beginning))))
       (force-mode-line-update t))))
 
-(defun custode--write-project-tasks (project-root tasks)
-  "Write project task to `custode-save-file' file in PROJECT-ROOT.
+(defun custode--write-project-tasks (project-root commands)
+  "Write project COMMANDS to `custode-save-file' file in PROJECT-ROOT.
 
-Deletes the file if no tasks is defined."
+Deletes the file if COMMANDS are empty."
   (let ((filename (concat (file-name-as-directory project-root) custode-save-file)))
-    (if tasks
+    (if commands
         (with-temp-buffer
           (insert ";;; -*- lisp-data -*-\n")
           (let ((print-length nil)
                 (print-level nil))
-            (pp tasks (current-buffer)))
+            (pp commands (current-buffer)))
           (write-region nil nil filename nil 'silent))
       (delete-file filename))))
 
 (defun custode--read-project-tasks (project-root)
-  "Read project tasks from `custode-save-file' file in PROJECT-ROOT."
+  "Read project commands from `custode-save-file' file in PROJECT-ROOT."
   (let* ((filename (concat (file-name-as-directory project-root) custode-save-file))
          (read-data (when (file-exists-p filename)
                       (with-temp-buffer
                         (insert-file-contents filename)
                         (read (current-buffer)))))
-         (tasks))
+         (commands))
     (dolist (item read-data)
       ;; Task name.
       (when (stringp (car item))
-        (let ((read-task-name (car item))
+        (let ((read-task-command (car item))
               (read-task (cdr item))
               (temp-task '()))
-          ;; Task name is required.
           (when (and (assoc :task read-task)
                      (stringp (cdr (assoc :task read-task))))
-            (push (cons :task (cdr (assoc :task read-task))) temp-task)
-            ;; Check for other optional values.
-            (when (and (assoc :positioning-function read-task)
-                       (symbolp (cdr (assoc :positioning-function read-task)))
-                       (memq (cdr (assoc :positioning-function read-task))
-                             custode-buffer-positioning-functions))
-              (push (cons :positioning-function (cdr (assoc :positioning-function read-task))) temp-task))
-            (push (cons read-task-name temp-task) tasks)))))
-    tasks))
+            ;; Old format, use :task instead.
+            (setq read-task-command (cdr (assoc :task read-task))))
+          ;; Check for optional values.
+          (when (and (assoc :positioning-function read-task)
+                     (symbolp (cdr (assoc :positioning-function read-task)))
+                     (memq (cdr (assoc :positioning-function read-task))
+                           custode-buffer-positioning-functions))
+            (push (cons :positioning-function (cdr (assoc :positioning-function read-task))) temp-task))
+          (push (cons read-task-command temp-task) commands))))
+    commands))
 
 (provide 'custode)
 ;;; custode.el ends here
