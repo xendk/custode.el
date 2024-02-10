@@ -208,14 +208,14 @@ prefix argument."
   (unless (member positioning-function custode-buffer-positioning-functions)
     (error "Unknown positioning function %s" positioning-function))
   (let* ((project-root (custode--current-project-root))
-         (project-tasks (or (cdr (custode--get-project project-root))
-                            (error "Unknown project %s" project-root)))
-         (task (assoc command project-tasks)))
-    (unless task
+         (project-commands (or (cdr (custode--get-project project-root))
+                               (error "Unknown project %s" project-root)))
+         (command (assoc command project-commands)))
+    (unless command
       (error "Unknown command \"%s\"" command))
-    (if (assoc :positioning-function (cdr task))
-        (setf (cdr (assoc :positioning-function (cdr task))) positioning-function)
-      (push (cons :positioning-function positioning-function) (cdr task)))))
+    (if (assoc :positioning-function (cdr command))
+        (setf (cdr (assoc :positioning-function (cdr command))) positioning-function)
+      (push (cons :positioning-function positioning-function) (cdr command)))))
 
 (defun custode-set-command-args (command args)
   "Set/unset command arguments for COMMAND in the current project.
