@@ -62,7 +62,7 @@ The format is:
     (define-key map "k" 'custode-delete-command)
     (define-key map "e" 'custode-watch)
     (define-key map "d" 'custode-unwatch)
-    (define-key map "a" 'custode-set-task-args)
+    (define-key map "a" 'custode-set-command-args)
     (define-key map "l" 'custode-load)
     (define-key map "s" 'custode-save)
     (define-key map "p" 'custode-set-buffer-positioning)
@@ -217,7 +217,7 @@ prefix argument."
         (setf (cdr (assoc :positioning-function (cdr task))) positioning-function)
       (push (cons :positioning-function positioning-function) (cdr task)))))
 
-(defun custode-set-task-args (command args)
+(defun custode-set-command-args (command args)
   "Set/unset command arguments for COMMAND in the current project.
 
 This is, for instance, useful for temporarily focusing tests on
@@ -229,7 +229,7 @@ command (with a space in between). If the string is empty, revert
 to the original command without any further arguments.
 
 Interactively, run the command after setting it, if the command
-is enabled, unless called with a prefix argument.
+is being watched, unless called with a prefix argument.
 
 Command arguments persists for the duration of the Emacs session."
   (interactive
@@ -237,7 +237,7 @@ Command arguments persists for the duration of the Emacs session."
      (list
       command
       (read-string "Command arguments: "
-                   (custode--get-task-args (custode--current-project-root) command)
+                   (custode--get-command-args (custode--current-project-root) command)
                    'custode-args-history))))
   (let* ((args (string-trim args))
          (project-root (custode--current-project-root))
@@ -391,7 +391,7 @@ Returns a list of commands."
             (push (car command) watching))))
     watching))
 
-(defun custode--get-task-args (project-root command)
+(defun custode--get-command-args (project-root command)
   "Get the currently set arguments for the PROJECT-ROOT COMMAND."
   (let ((state (custode--get-command-state project-root command)))
     (cdr (assoc :args (cdr state)))))
@@ -414,7 +414,7 @@ Returns a list of commands."
             (let* ((project-root (custode--current-project-root))
                    (tasks (cdr (custode--get-project project-root)))
                    (command (car (assoc c tasks)))
-                   (args (custode--get-task-args project-root c)))
+                   (args (custode--get-command-args project-root c)))
               (list c "" (concat
                           (propertize
                            (format " -- %s " command)
@@ -434,7 +434,7 @@ regardless of whether they're enabled or not."
     (dolist (command trigger-tasks)
       (let* ((task (cdr (assoc command commands)))
              (positioning-function (cdr (assoc :positioning-function task)))
-             (args (custode--get-task-args project-root command)))
+             (args (custode--get-command-args project-root command)))
         (custode--start project-root command args positioning-function)))))
 
 (defun custode--start (project-root command &optional args position-function)

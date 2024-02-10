@@ -38,7 +38,7 @@
       (expect 'custode--start :to-have-been-called-with "project" "the other command" nil nil))
 
     (it "runs commands with args"
-      (custode-set-task-args "the command" "the arguments")
+      (custode-set-command-args "the command" "the arguments")
       (custode--trigger "project")
       (expect 'custode--start :to-have-been-called-with "project" "the command" "the arguments" nil)))
 

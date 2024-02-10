@@ -163,32 +163,32 @@
           (expect (get-buffer buffer-name)
                   :not :to-be nil)))))
 
-  (describe "task :args state"
+  (describe "command :args state"
     (before-each
       (spy-on 'custode--current-project-root :and-return-value "project"))
 
-    (describe "custode-set-task-args"
+    (describe "custode-set-command-args"
       (it "sets args state"
-        (custode-set-task-args "task" "command args")
+        (custode-set-command-args "task" "command args")
         (expect custode--command-states
                 :to-have-same-items-as
                 '(("project\0task" . ((:args . "command args"))))))
       (it "unsets args state on empty arg"
-        (custode-set-task-args "task" "command args")
-        (custode-set-task-args "task" "")
+        (custode-set-command-args "task" "command args")
+        (custode-set-command-args "task" "")
         (expect custode--command-states
                 :to-have-same-items-as
                 '(("project\0task" . ())))))
 
-    (describe "custode--get-task-args"
+    (describe "custode--get-command-args"
       (it "returns nil when no args is set"
-        (expect (custode--get-task-args "project" "task")
+        (expect (custode--get-command-args "project" "task")
                 :to-equal
                 nil))
 
       (it "returns the currently set args"
-        (custode-set-task-args "task" "command args")
-        (expect (custode--get-task-args "project" "task")
+        (custode-set-command-args "task" "command args")
+        (expect (custode--get-command-args "project" "task")
                 :to-equal
                 "command args")
         ))))
