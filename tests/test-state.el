@@ -32,9 +32,9 @@
               '(("test" . ((:running . 1)))
                 ("test2" . ())))))
 
-  (describe "custode--get-task-state"
+  (describe "custode--get-command-state"
     (it "creates new task states"
-      (expect (custode--get-task-state "test" "task")
+      (expect (custode--get-command-state "test" "task")
               :to-equal
               '("test\0task" . ()))
       (expect custode--command-states
@@ -43,10 +43,10 @@
 
     (it "allows for modifying task states"
       ;; Unrelated task.
-      (custode--get-task-state "test" "task2")
-      (setq task (custode--get-task-state "test" "task"))
+      (custode--get-command-state "test" "task2")
+      (setq task (custode--get-command-state "test" "task"))
       (push (cons :enabled t) (cdr task))
-      (expect (custode--get-task-state "test" "task")
+      (expect (custode--get-command-state "test" "task")
               :to-equal
               '("test\0task" . ((:enabled . t))))
       (expect custode--command-states
@@ -66,54 +66,54 @@
                                  ("project2" .
                                   (("task1" . ((:task . "task three"))))))))
       (setq custode--command-states (copy-tree
-                                     '(("project\0task1" . ((:enabled t)))
-                                       ("project2\0task1" . ((:enabled t)))))))
+                                     '(("project\0task1" . ((:watching t)))
+                                       ("project2\0task1" . ((:watching t)))))))
 
-    (describe "custode--task-enabled-p"
+    (describe "custode--command-watching-p"
       (it "returns t for enabled tasks"
-        (expect (custode--task-enabled-p "project" "task1")
+        (expect (custode--command-watching-p "project" "task1")
                 :to-be t))
 
       (it "returns nil for disabled tasks"
-        (expect (custode--task-enabled-p "project" "task2")
+        (expect (custode--command-watching-p "project" "task2")
                 :to-be nil))
 
       (it "returns nil for unknown tasks"
-        (expect (custode--task-enabled-p "project" "task3")
+        (expect (custode--command-watching-p "project" "task3")
                 :to-be nil)))
 
-    (describe "custode--get-enabled-tasks"
+    (describe "custode--get-watching-commands"
       (it "returns enabled tasks"
-        (expect (custode--get-enabled-tasks "project")
+        (expect (custode--get-watching-commands "project")
                 :to-have-same-items-as
                 '("task1"))))
 
-    (describe "custode-enable-task"
+    (describe "custode-watch"
       (it "enables tasks"
         (spy-on 'custode--current-project-root :and-return-value "project")
 
-        (shut-up (custode-enable-task "task2"))
-        (expect (custode--get-enabled-tasks "project")
+        (shut-up (custode-watch "task2"))
+        (expect (custode--get-watching-commands "project")
                 :to-have-same-items-as
                 '("task2" "task1")))
 
       (it "errors on unknown project"
         (spy-on 'custode--current-project-root :and-return-value nil)
-        (expect (custode-enable-task "task1")
+        (expect (custode-watch "task1")
                 :to-throw))
 
       ;; Interactively, this is not possible, but it is when calling
       ;; from lisp.
       (it "errors on unknown task"
         (spy-on 'custode--current-project-root :and-return-value "project")
-        (expect (custode-enable-task "project" "taskx")
+        (expect (custode-watch "project" "taskx")
                 :to-throw))
 
       (it "triggers task when called interactively"
         (spy-on 'custode--current-project-root :and-return-value "project")
         (spy-on 'custode--trigger)
 
-        (shut-up (funcall-interactively 'custode-enable-task "task2"))
+        (shut-up (funcall-interactively 'custode-watch "task2"))
         (expect 'custode--trigger
                 :to-have-been-called-with
                 "project" '("task2")))
@@ -123,34 +123,34 @@
         (spy-on 'custode--trigger)
 
         (let ((current-prefix-arg '(4)))
-          (shut-up (funcall-interactively 'custode-enable-task "task2")))
+          (shut-up (funcall-interactively 'custode-watch "task2")))
         (expect 'custode--trigger
                 :not :to-have-been-called
                 )))
 
-    (describe "custode-disable-task"
+    (describe "custode-unwatch"
       (it "disables tasks"
         (spy-on 'custode--current-project-root :and-return-value "project")
-        (shut-up (custode-disable-task "task1"))
-        (expect (custode--get-enabled-tasks "project")
+        (shut-up (custode-unwatch "task1"))
+        (expect (custode--get-watching-commands "project")
                 :to-have-same-items-as
                 '()))
 
       (it "errors on unknown project"
         (spy-on 'custode--current-project-root :and-return-value nil)
-        (expect (custode-disable-task "task1")
+        (expect (custode-unwatch "task1")
                 :to-throw))
 
       (it "errors on unknown task"
         (spy-on 'custode--current-project-root :and-return-value "project")
-        (expect (custode-disable-task "taskx")
+        (expect (custode-unwatch "taskx")
                 :to-throw))
 
       (it "deletes buffer when disabling task"
         (spy-on 'custode--current-project-root :and-return-value "project")
         (let ((buffer-name (custode-buffer-name "project" "task1")))
           (get-buffer-create buffer-name)
-          (shut-up (funcall-interactively 'custode-disable-task "task1"))
+          (shut-up (funcall-interactively 'custode-unwatch "task1"))
           (expect (get-buffer buffer-name)
                   :to-be nil)))
 
@@ -159,7 +159,7 @@
         (let ((buffer-name (custode-buffer-name "project" "task1")))
           (get-buffer-create buffer-name)
           (let ((current-prefix-arg '(4)))
-            (shut-up (funcall-interactively 'custode-disable-task "task1")))
+            (shut-up (funcall-interactively 'custode-unwatch "task1")))
           (expect (get-buffer buffer-name)
                   :not :to-be nil)))))
 

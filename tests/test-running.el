@@ -20,24 +20,24 @@
       (setq custode--command-states '())
       (spy-on 'custode--current-project-root :and-return-value "unrelated")
       (shut-up (custode-add-command "unrelated command")
-               (custode-enable-task "unrelated command"))
+               (custode-watch "unrelated command"))
       (spy-on 'custode--current-project-root :and-return-value "project")
       (shut-up (custode-add-command "the command")
-               (custode-enable-task "the command"))
+               (custode-watch "the command"))
       (spy-on 'custode--start))
 
-    (it "triggers task running"
+    (it "runs watched commands"
       (custode--trigger "project")
       (expect 'custode--start :to-have-been-called-with "project" "the command" nil nil))
 
-    (it "triggers multiple task running"
+    (it "runs multiple watched commands"
       (shut-up (custode-add-command "the other command")
-               (custode-enable-task "the other command"))
+               (custode-watch "the other command"))
       (custode--trigger "project")
       (expect 'custode--start :to-have-been-called-with "project" "the command" nil nil)
       (expect 'custode--start :to-have-been-called-with "project" "the other command" nil nil))
 
-    (it "triggers task with args"
+    (it "runs commands with args"
       (custode-set-task-args "the command" "the arguments")
       (custode--trigger "project")
       (expect 'custode--start :to-have-been-called-with "project" "the command" "the arguments" nil)))

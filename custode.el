@@ -43,7 +43,7 @@ The format is:
 
 The format is:
 ((\"project_root\\0command\" . (
-    (:enabled . t)
+    (:watching . t)
 )))
 ")
 
@@ -60,8 +60,8 @@ The format is:
   (let ((map (make-sparse-keymap)))
     (define-key map "c" 'custode-add-command)
     (define-key map "k" 'custode-delete-command)
-    (define-key map "e" 'custode-enable-task)
-    (define-key map "d" 'custode-disable-task)
+    (define-key map "e" 'custode-watch)
+    (define-key map "d" 'custode-unwatch)
     (define-key map "a" 'custode-set-task-args)
     (define-key map "l" 'custode-load)
     (define-key map "s" 'custode-save)
@@ -123,10 +123,9 @@ These functions are called with the buffer as the only argument"
   (concat " *custode " project-root " " command "*"))
 
 (defun custode-add-command (command)
-  "Add a command to the current project.
+  "Add COMMAND to the current project.
 
-COMMAND is a command passed to the shell to run. Initially the
-command will be disabled, use `custode-enable-task' to enable
+After adding a command, use `custode-watch' to continuously run
 it."
   (interactive "sCommand: ")
   (let ((project-root (custode--current-project-root)))
@@ -148,43 +147,36 @@ it."
         (message "Deleted \"%s\"" command))
     (message "Command not deleted")))
 
-(defun custode-enable-task (command)
-  "Enable COMMAND in the current project.
+(defun custode-watch (command)
+  "Watch COMMAND in the current project.
 
-Enabled commands will automatically run when files in the project
-is saved.
+When watching a command it will automatically be run when files
+in the project is saved.
 
-Initially, all commands, whether added with `custode-add-command'
-or loaded from `custode-save-file' will be disabled until
-manually enabled.
-
-Interactively, run the command after enabling it, unless called with
+Interactively, the command is run immediately, unless called with
 a prefix argument."
   (interactive
    (list
     (custode--completing-read-task "Enable")))
   (let ((project-root (custode--current-project-root)))
-    (custode--set-task-enabled project-root command t)
+    (custode--set-command-watching project-root command t)
     (when (and (called-interactively-p) (not current-prefix-arg))
       (custode--trigger project-root (list command)))
-    (message "Enabled \"%s\"" command)))
+    (message "Watching \"%s\"" command)))
 
-(defun custode-disable-task (command)
-  "Disable COMMAND in the current project.
+(defun custode-unwatch (command)
+  "Stop watching COMMAND in the current project.
 
-Disabled commands will not be run when project files are saved.
-
-Initially, all commands, whether added with `custode-add-command'
-or loaded from `custode-save-file' will be disabled until
-manually enabled."
+Interactively, any output buffer is removed, unless called with a
+prefix argument."
   (interactive
    (list
     (custode--completing-read-task "Disable")))
   (let ((project-root (custode--current-project-root)))
-    (custode--set-task-enabled project-root command nil)
+    (custode--set-command-watching project-root command nil)
     (when (and (called-interactively-p) (not current-prefix-arg))
       (kill-buffer (custode-buffer-name project-root command)))
-    (message "Disabled \"%s\"" command)))
+    (message "Stopped watching \"%s\"" command)))
 
 (defun custode-load ()
   "Load project commands from `custode-save-file' file in project root."
@@ -249,13 +241,13 @@ Command arguments persists for the duration of the Emacs session."
                    'consult-args-history))))
   (let* ((args (string-trim args))
          (project-root (custode--current-project-root))
-         (state (custode--get-task-state project-root command)))
+         (state (custode--get-command-state project-root command)))
     (if (equal args "")
         (setf (cdr state) (assoc-delete-all :args (cdr state)))
       (push (cons :args args) (cdr state)))
     (when (and (called-interactively-p)
                (not current-prefix-arg)
-               (custode--task-enabled-p project-root command))
+               (custode--command-watching-p project-root command))
       (custode--trigger project-root (list command)))))
 
 ;;;###autoload
@@ -332,7 +324,7 @@ Triggers running enabled commands if the file is in a project."
     (when current-project
       (project-root current-project))))
 
-(defun custode--get-task-state (project-root command)
+(defun custode--get-command-state (project-root command)
   "Returns COMMAND state for PROJECT-ROOT.
 
 Creates the state if not found."
@@ -368,42 +360,40 @@ Returns (PROJECT-ROOT . COMMANDS)."
     (when project-root
       (cdr (custode--get-project project-root)))))
 
-(defun custode--set-task-enabled (project-root command state)
-  "Set tasks enabled state.
+(defun custode--set-command-watching (project-root command state)
+  "Set COMMAND watching state.
 
-PROJECT-ROOT is the project root, COMMAND is the task name and
-STATE is `t' or `nil'."
+PROJECT-ROOT is the project root and STATE is `t' or `nil'."
   (let* ((project-tasks (or (cdr (custode--get-project project-root))
                             (error "Unknown project %s" project-root)))
          (task (assoc command project-tasks))
-         (task-state (custode--get-task-state project-root command)))
+         (task-state (custode--get-command-state project-root command)))
     (unless task
       (error "Unknown command \"%s\"" command))
-    (if (assoc :enabled (cdr task-state))
-        (setf (cdr (assoc :enabled (cdr task-state))) state)
-      (push (cons :enabled state) (cdr task-state)))))
+    (if (assoc :watching (cdr task-state))
+        (setf (cdr (assoc :watching (cdr task-state))) state)
+      (push (cons :watching state) (cdr task-state)))))
 
-(defun custode--task-enabled-p (project-root command)
-  "Check whether command is enabled."
-  (if (member command (custode--get-enabled-tasks project-root))
+(defun custode--command-watching-p (project-root command)
+  "Check whether command is watching."
+  (if (member command (custode--get-watching-commands project-root))
       t nil))
 
-(defun custode--get-enabled-tasks (project-root)
-  "Get enabled commands for PROJECT-ROOT.
+(defun custode--get-watching-commands (project-root)
+  "Get watching commands for PROJECT-ROOT.
 
 Returns a list of commands."
-  (let ((project-tasks (alist-get project-root custode--commands nil nil 'equal))
-        (enabled-tasks (list)))
-    (if project-tasks
-        (dolist (task project-tasks)
-          (when (cdr (assoc :enabled (cdr (custode--get-task-state project-root (car task)))))
-            (push (car task) enabled-tasks)))
-      )
-    enabled-tasks))
+  (let ((commands (alist-get project-root custode--commands nil nil 'equal))
+        (watching (list)))
+    (if commands
+        (dolist (command commands)
+          (when (cdr (assoc :watching (cdr (custode--get-command-state project-root (car command)))))
+            (push (car command) watching))))
+    watching))
 
 (defun custode--get-task-args (project-root command)
   "Get the currently set arguments for the PROJECT-ROOT COMMAND."
-  (let ((state (custode--get-task-state project-root command)))
+  (let ((state (custode--get-command-state project-root command)))
     (cdr (assoc :args (cdr state)))))
 
 (defun custode--completing-read-task (prompt)
@@ -439,7 +429,7 @@ Returns a list of commands."
 Optionally supply COMMANDS to trigger these specific commands,
 regardless of whether they're enabled or not."
   (let ((commands (cdr (custode--get-project project-root)))
-        (trigger-tasks (or commands (custode--get-enabled-tasks project-root)))
+        (trigger-tasks (or commands (custode--get-watching-commands project-root)))
         (default-directory project-root))
     (dolist (command trigger-tasks)
       (let* ((task (cdr (assoc command commands)))
