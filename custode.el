@@ -110,12 +110,8 @@ These functions are called with the buffer as the only argument"
   :group 'custode
   :group 'faces)
 
-(defface custode-task-command
-  '((t :inherit completions-annotations))
-  "Face used to highlight command in completion.")
-
-(defface custode-task-args
-  '((t :inherit (completions-common-part italic)))
+(defface custode-completions-args
+  '((t :inherit completions-common-part))
   "Face used to highlight command arguments in completion.")
 
 (defun custode-buffer-name (project-root command)
@@ -399,27 +395,26 @@ Returns a list of commands."
   "Use `completing-read' to read a command in the current project."
   (unless (custode--current-project-root)
     (user-error "Not in a project"))
-  (completing-read (concat prompt ": ") #'custode--task-completion-table nil t))
+  (completing-read (concat prompt ": ") #'custode--command-completion-table nil t))
 
-(defun custode--task-completion-table (str pred flag)
+(defun custode--command-completion-table (str pred flag)
   "Completion table for custode commands."
   (pcase flag
-    ('metadata '(metadata (category . 'custode-task)
-                          (affixation-function . custode--task-completion-table-affixation)))
+    ('metadata '(metadata (category . 'custode-command)
+                          (affixation-function . custode--command-completion-table-affixation)))
     (_ (all-completions str (custode--get-current-project-commands) pred))))
 
-(defun custode--task-completion-table-affixation (completions)
+(defun custode--command-completion-table-affixation (completions)
   (mapcar (lambda (c)
             (let* ((project-root (custode--current-project-root))
-                   (tasks (cdr (custode--get-project project-root)))
-                   (command (car (assoc c tasks)))
+                   (commands (cdr (custode--get-project project-root)))
+                   (command (car (assoc c commands)))
                    (args (custode--get-command-args project-root c)))
-              (list c "" (concat
-                          (propertize
-                           (format " -- %s " command)
-                           'face 'custode-task-command)
-                          (when args
-                            (propertize args 'face 'custode-task-args))))))
+              (list c
+                    (if (custode--command-watching-p project-root command)
+                        "✓ " "  ")
+                    (when args
+                      (propertize (concat " " args) 'face 'custode-completions-args)))))
           completions))
 
 (defun custode--trigger (project-root &optional commands)
