@@ -67,12 +67,12 @@ you configured:
   command that can be run by the shell. New commands always starts out
   disabled, so adding a command wont make anything happen in itself.
 * `k`: Remove a command.
-* `e`: Enable a command. This makes custode run this task whenever
+* `w`: Watch a command. This makes custode run this task whenever
   saving a file in the project. When run interactively, this will also
   trigger the command (can be suppressed with a prefix argument).
-* `d`: Disable a command. Stops a command from running automatically
-  again. Interactively, this will also delete the output buffer,
-  unless called with a prefix argument.
+* `W`: Stop watching command. Stops a command from running
+  automatically again. Interactively, this will also delete the output
+  buffer, unless called with a prefix argument.
 * `a`: Set command arguments. When arguments has been set, they're
   added to the shell command when run. A use case is temporarily
   adding arguments to a test command to only run a subset of tests.
@@ -82,7 +82,7 @@ you configured:
 * `l`: Loads commands from the configuration file (`.custode` per
   default, can be configured with the `custode-save-file` custom
   option) in the root of the project. This should seldom be needed as
-  cammands are automatically loaded on project discovery.
+  commands are automatically loaded on project discovery.
 * `s`: Saves configuration to the configuration file in the project
   root.
 * `p`: Select how to position the output buffer when the command has
