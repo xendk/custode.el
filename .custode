@@ -1,5 +1,5 @@
 ;;; -*- lisp-data -*-
 (("eldev compile")
- ("eldev test --print-backtraces=1"
-  (:positioning-function . custode--position-buffer-end))
- ("eldev test --undercover=on,codecov,restart,dontsend"))
+ ("eldev test --undercover=on,codecov,restart,dontsend")
+ ("eldev test -b1"
+  (:positioning-function . custode--position-buffer-end)))
