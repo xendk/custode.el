@@ -185,7 +185,7 @@ prefix argument."
     (unless project-root
       (user-error "Not in a project"))
     (setcdr (custode--get-project project-root)
-            (custode--read-project-tasks project-root))
+            (custode--read-project-commands project-root))
     (message "Loaded project commands.")))
 
 (defun custode-save ()
@@ -194,7 +194,7 @@ prefix argument."
   (let ((project-root (custode--current-project-root)))
     (unless project-root
       (user-error "Not in a project"))
-    (custode--write-project-tasks project-root (custode--get-current-project-commands))
+    (custode--write-project-commands project-root (custode--get-current-project-commands))
     (message "Saved project commands")))
 
 (defun custode-set-buffer-positioning (command positioning-function)
@@ -470,7 +470,7 @@ POSITION-FUNCTION is a function that positions the buffer afterwards."
                       (or position-function 'custode--position-buffer-beginning))))
       (force-mode-line-update t))))
 
-(defun custode--write-project-tasks (project-root commands)
+(defun custode--write-project-commands (project-root commands)
   "Write project COMMANDS to `custode-save-file' file in PROJECT-ROOT.
 
 Deletes the file if COMMANDS are empty."
@@ -484,7 +484,7 @@ Deletes the file if COMMANDS are empty."
           (write-region nil nil filename nil 'silent))
       (delete-file filename))))
 
-(defun custode--read-project-tasks (project-root)
+(defun custode--read-project-commands (project-root)
   "Read project commands from `custode-save-file' file in PROJECT-ROOT."
   (let* ((filename (concat (file-name-as-directory project-root) custode-save-file))
          (read-data (when (file-exists-p filename)
@@ -493,22 +493,21 @@ Deletes the file if COMMANDS are empty."
                         (read (current-buffer)))))
          (commands))
     (dolist (item read-data)
-      ;; Task name.
       (when (stringp (car item))
-        (let ((read-task-command (car item))
-              (read-task (cdr item))
-              (temp-task '()))
-          (when (and (assoc :task read-task)
-                     (stringp (cdr (assoc :task read-task))))
+        (let ((read-command (car item))
+              (read-command-options (cdr item))
+              (new-command '()))
+          (when (and (assoc :task read-command-options)
+                     (stringp (cdr (assoc :task read-command-options))))
             ;; Old format, use :task instead.
-            (setq read-task-command (cdr (assoc :task read-task))))
+            (setq read-command (cdr (assoc :task read-command-options))))
           ;; Check for optional values.
-          (when (and (assoc :positioning-function read-task)
-                     (symbolp (cdr (assoc :positioning-function read-task)))
-                     (memq (cdr (assoc :positioning-function read-task))
+          (when (and (assoc :positioning-function read-command-options)
+                     (symbolp (cdr (assoc :positioning-function read-command-options)))
+                     (memq (cdr (assoc :positioning-function read-command-options))
                            custode-buffer-positioning-functions))
-            (push (cons :positioning-function (cdr (assoc :positioning-function read-task))) temp-task))
-          (push (cons read-task-command temp-task) commands))))
+            (push (cons :positioning-function (cdr (assoc :positioning-function read-command-options))) new-command))
+          (push (cons read-command new-command) commands))))
     commands))
 
 (provide 'custode)

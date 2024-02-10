@@ -8,13 +8,13 @@
 
   (before-each
     (setq custode--commands '()))
-  (describe "custode--write-project-tasks"
+  (describe "custode--write-project-commands"
     (it "writes the file"
       (assess-with-filesystem
        '()
        (setq tasks '(("task1" . ())
                      ("task2" . ((:positioning-function . custode--position-buffer-end)))))
-       (custode--write-project-tasks default-directory tasks)
+       (custode--write-project-commands default-directory tasks)
 
        (expect (assess-file (concat (file-name-as-directory default-directory) custode-save-file))
                :to-equal
@@ -34,7 +34,7 @@
   (:invalid . \"task three\")))
 "))
        (setq tasks '())
-       (custode--write-project-tasks default-directory tasks)
+       (custode--write-project-commands default-directory tasks)
 
        (expect (file-exists-p (concat (file-name-as-directory default-directory) custode-save-file))
                :to-equal
@@ -44,13 +44,13 @@
         (assess-with-filesystem
          '()
          (setq tasks '())
-         (custode--write-project-tasks default-directory tasks)
+         (custode--write-project-commands default-directory tasks)
 
          (expect (file-exists-p (concat (file-name-as-directory default-directory) custode-save-file))
                  :to-equal
                  nil))))
 
-  (describe "custode--read-project-tasks"
+  (describe "custode--read-project-commands"
     (it "reads the file"
       (assess-with-filesystem
        (list (list custode-save-file ";;; -*- lisp-data -*-
@@ -59,7 +59,7 @@
   (:positioning-function . custode--position-buffer-end))
  (\"task3\"))
 "))
-       (expect (custode--read-project-tasks default-directory)
+       (expect (custode--read-project-commands default-directory)
                :to-have-same-items-as
                '(("task1" . ())
                  ("task2" . ((:positioning-function . custode--position-buffer-end)))
@@ -76,11 +76,11 @@
  (\"task3\"
   (:invalid . \"task three\")))
 "))
-          (expect (custode--read-project-tasks default-directory)
-                  :to-have-same-items-as
-                  '(("task one" . ())
-                    ("task two" . ((:positioning-function . custode--position-buffer-end)))
-                    ;; This would have been ignored by the old
-                    ;; version, but considering the number of users,
-                    ;; it's not worth worring about.
-                    ("task3" . ())))))))
+       (expect (custode--read-project-commands default-directory)
+               :to-have-same-items-as
+               '(("task one" . ())
+                 ("task two" . ((:positioning-function . custode--position-buffer-end)))
+                 ;; This would have been ignored by the old
+                 ;; version, but considering the number of users,
+                 ;; it's not worth worring about.
+                 ("task3" . ())))))))
