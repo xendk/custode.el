@@ -395,6 +395,8 @@ Returns a list of commands."
   "Use `completing-read' to read a command in the current project."
   (unless (custode--current-project-root)
     (user-error "Not in a project"))
+  (unless (custode--get-current-project-commands)
+    (user-error "No commands defined in project"))
   (completing-read (concat prompt ": ") #'custode--command-completion-table nil t))
 
 (defun custode--command-completion-table (str pred flag)
