@@ -238,7 +238,7 @@ Command arguments persists for the duration of the Emacs session."
       command
       (read-string "Command arguments: "
                    (custode--get-task-args (custode--current-project-root) command)
-                   'consult-args-history))))
+                   'custode-args-history))))
   (let* ((args (string-trim args))
          (project-root (custode--current-project-root))
          (state (custode--get-command-state project-root command)))
