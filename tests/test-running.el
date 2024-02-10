@@ -14,10 +14,10 @@
               " *custode project comamnd*")))
 
   (describe "custode--trigger"
-    :var (custode--tasks custode--task-states)
+    :var (custode--commands custode--command-states)
     (before-each
-      (setq custode--tasks '())
-      (setq custode--task-states '())
+      (setq custode--commands '())
+      (setq custode--command-states '())
       (spy-on 'custode--current-project-root :and-return-value "unrelated")
       (shut-up (custode-create-task "unrelated command")
                (custode-enable-task "unrelated command"))

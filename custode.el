@@ -29,29 +29,26 @@
 (require 'compile)
 (require 'project)
 
-(defvar custode--tasks '()
-  "List of known tasks across all projects.
+(defvar custode--commands '()
+  "List of known commands across all projects.
 
 The format is:
 ((\"project_root\" . (
-  \"task1\" (
-    (:task . \"eldev test\")
-    )
-  )
-))
+  \"eldev test\" (
+    (:positioning-function . custode--position-buffer-end)))))
 ")
 
-(defvar custode--task-states '()
-  "State storage for tasks.
+(defvar custode--command-states '()
+  "Stores runtime state of commands.
 
 The format is:
-((\"project_root\\0task\" . (
+((\"project_root\\0command\" . (
     (:enabled . t)
 )))
 ")
 
 (defvar custode--project-states '()
-  "State storage for tasks.
+  "Stores runtime state of projects.
 
 The format is:
 ((\"project_root\" . (
@@ -340,10 +337,10 @@ Triggers running enabled commands if the file is in a project."
 
 Creates the state if not found."
   (let ((key (concat project-root "\0" command)))
-    (unless (assoc key custode--task-states)
+    (unless (assoc key custode--command-states)
       (let ((val (copy-tree '())))
-        (push (cons key val) custode--task-states)))
-    (assoc key custode--task-states)))
+        (push (cons key val) custode--command-states)))
+    (assoc key custode--command-states)))
 
 (defun custode--get-project-state (project-root)
   "Returns project state for PROJECT-ROOT.
@@ -360,10 +357,10 @@ Creates the state if not found."
 Adds PROJECT-ROOT to the list of projects if not found.
 
 Returns (PROJECT-ROOT . COMMANDS)."
-  (unless (assoc project-root custode--tasks)
-    (push (cons project-root '()) custode--tasks)
+  (unless (assoc project-root custode--commands)
+    (push (cons project-root '()) custode--commands)
     (custode-load))
-  (assoc project-root custode--tasks))
+  (assoc project-root custode--commands))
 
 (defun custode--get-current-project-task-names ()
   "Get tasks of current project."
@@ -395,7 +392,7 @@ STATE is `t' or `nil'."
   "Get enabled commands for PROJECT-ROOT.
 
 Returns a list of commands."
-  (let ((project-tasks (alist-get project-root custode--tasks nil nil 'equal))
+  (let ((project-tasks (alist-get project-root custode--commands nil nil 'equal))
         (enabled-tasks (list)))
     (if project-tasks
         (dolist (task project-tasks)

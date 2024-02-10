@@ -4,9 +4,9 @@
 (require 'custode)
 
 (describe "task management"
-  :var (custode--tasks)
+  :var (custode--commands)
   (before-each
-    (setq custode--tasks '())
+    (setq custode--commands '())
     ;; Silence the load message.
     (spy-on 'custode-load))
 
@@ -47,13 +47,13 @@
     (it "should add tasks to current project"
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
       (shut-up (custode-create-task "the command"))
-      (expect custode--tasks
+      (expect custode--commands
               :to-equal
               '(("the-project/" .
                  (("the command" . ())))))
 
       (shut-up (custode-create-task "another command"))
-      (expect (cdr (assoc "the-project/" custode--tasks))
+      (expect (cdr (assoc "the-project/" custode--commands))
               :to-have-same-items-as
               '(("the command" . ())
                 ("another command" . ()))))
@@ -71,7 +71,7 @@
 
     (it "should remove tasks from current project"
       (shut-up (custode-delete-task "the command"))
-      (expect (cdr (assoc "the-project/" custode--tasks))
+      (expect (cdr (assoc "the-project/" custode--commands))
               :to-have-same-items-as
               '())))
 
@@ -82,7 +82,7 @@
 
     (it "sets the buffer positioning"
       (custode-set-buffer-positioning "the command" 'custode--position-buffer-end)
-      (expect (cdr (assoc "the command" (cdr (assoc "the-project/" custode--tasks))))
+      (expect (cdr (assoc "the command" (cdr (assoc "the-project/" custode--commands))))
               :to-have-same-items-as
               '((:positioning-function . custode--position-buffer-end))))
 

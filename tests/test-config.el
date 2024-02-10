@@ -4,10 +4,10 @@
 (require 'custode)
 
 (describe "config file"
-  :var (custode--tasks)
+  :var (custode--commands)
 
   (before-each
-    (setq custode--tasks '()))
+    (setq custode--commands '()))
   (describe "custode--write-project-tasks"
     (it "writes the file"
       (assess-with-filesystem

@@ -4,10 +4,10 @@
 (require 'custode)
 
 (describe "state management"
-  :var (custode--project-states custode--task-states)
+  :var (custode--project-states custode--command-states)
   (before-each
     (setq custode--project-states '())
-    (setq custode--task-states '())
+    (setq custode--command-states '())
     )
 
   (describe "custode--get-project-state"
@@ -37,7 +37,7 @@
       (expect (custode--get-task-state "test" "task")
               :to-equal
               '("test\0task" . ()))
-      (expect custode--task-states
+      (expect custode--command-states
               :to-equal
               '(("test\0task" . ()))))
 
@@ -49,25 +49,25 @@
       (expect (custode--get-task-state "test" "task")
               :to-equal
               '("test\0task" . ((:enabled . t))))
-      (expect custode--task-states
+      (expect custode--command-states
               :to-have-same-items-as
               '(("test\0task" . ((:enabled . t)))
                 ("test\0task2" . ())))))
 
   (describe "task :enabled state"
-    :var (custode--tasks custode--task-states)
+    :var (custode--commands custode--command-states)
 
     (before-each
       ;; Without copy-tree, all tests would work on the same list.
-      (setq custode--tasks (copy-tree
-                            '(("project" .
-                               (("task1" . ((:task . "task one")))
-                                ("task2" . ((:task . "task two")))))
-                              ("project2" .
-                               (("task1" . ((:task . "task three"))))))))
-      (setq custode--task-states (copy-tree
-                                  '(("project\0task1" . ((:enabled t)))
-                                    ("project2\0task1" . ((:enabled t)))))))
+      (setq custode--commands (copy-tree
+                               '(("project" .
+                                  (("task1" . ((:task . "task one")))
+                                   ("task2" . ((:task . "task two")))))
+                                 ("project2" .
+                                  (("task1" . ((:task . "task three"))))))))
+      (setq custode--command-states (copy-tree
+                                     '(("project\0task1" . ((:enabled t)))
+                                       ("project2\0task1" . ((:enabled t)))))))
 
     (describe "custode--task-enabled-p"
       (it "returns t for enabled tasks"
@@ -170,13 +170,13 @@
     (describe "custode-set-task-args"
       (it "sets args state"
         (custode-set-task-args "task" "command args")
-        (expect custode--task-states
+        (expect custode--command-states
                 :to-have-same-items-as
                 '(("project\0task" . ((:args . "command args"))))))
       (it "unsets args state on empty arg"
         (custode-set-task-args "task" "command args")
         (custode-set-task-args "task" "")
-        (expect custode--task-states
+        (expect custode--command-states
                 :to-have-same-items-as
                 '(("project\0task" . ())))))
 
