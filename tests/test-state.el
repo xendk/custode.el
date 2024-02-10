@@ -41,7 +41,7 @@
       (expect custode--command-states
               :to-have-same-items-as
               '(("test\0the command" . ((:running . 1)))))
-      (custode-edit-command "the command" "new command")
+      (shut-up (custode-edit-command "the command" "new command"))
       (expect custode--command-states
               :to-have-same-items-as
               '(("test\0new command" . ((:running . 1)))))))

@@ -150,7 +150,13 @@ Changes the command and carries state over."
     (setcar (assoc command (cdr project)) new-command)
     ;; Move state over.
     (when (assoc old-state-key custode--command-states)
-      (setcar (assoc old-state-key custode--command-states) new-state-key))))
+      (setcar (assoc old-state-key custode--command-states) new-state-key))
+    (when (and (custode--command-watching-p project-root new-command)
+               (called-interactively-p)
+               (not current-prefix-arg))
+      (kill-buffer (custode-buffer-name project-root command))
+      (custode--trigger project-root (list new-command)))
+    (message "Changed command")))
 
 (defun custode-delete-command (command)
   "Delete COMMAND from the current project."

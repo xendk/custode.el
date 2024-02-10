@@ -68,6 +68,9 @@ you configured:
   disabled, so adding a command wont make anything happen in itself.
 * `k`: Remove a command.
 * `e`: Edit command. Allows for changing the command but retain state.
+  When run interactively, this will also delete any existing output
+  buffers and trigger the command if it is being watched (can be
+  suppressed with a prefix argument).
 * `w`: Watch a command. This makes custode run this task whenever
   saving a file in the project. When run interactively, this will also
   trigger the command (can be suppressed with a prefix argument).
