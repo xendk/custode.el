@@ -7,16 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Global minor mode for running tasks.
-- Running enabled tasks on file save.
-- Show task output on failure, hide it on success.
-- Commands for creating, deleting, enabling and disabling of tasks.
-- Mode-line lighter for buffers in projects with tasks.
-- Lighter highlights when task running.
-- Load and save of project tasks.
-- Automatic loading of tasks in projects on discovery.
-- Configurable positioning of the compilation buffer.
-- Trigger tasks when enabled interactively, unless called with prefix
-  arg.
-- Deletes task buffer when disabling tasks.
-- Annotate tasks completions with task command.
+- Global minor mode for running commands.
+- Running watched tasks on file save.
+- Show command output on failure, hide it on success.
+- Commands for creating, deleting, watching and unwatching of
+  commands.
+- Mode-line lighter for buffers in projects with commands.
+- Lighter highlights when command is running.
+- Load and save of project commands.
+- Automatic loading of commands in projects on discovery.
+- Configurable positioning of the output buffer.
+- Trigger commands when enabled interactively, unless called with
+  prefix argument.
+- Deletes command buffer when disabling tasks.
+- Annotate command completions with watch state and arguments.
