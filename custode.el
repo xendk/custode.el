@@ -260,15 +260,15 @@ Command arguments persists for the duration of the Emacs session."
 (define-globalized-minor-mode global-custode-mode custode-mode
   custode-mode :group 'custode)
 
-(define-compilation-mode custode-task-mode "Custode"
-  "Major mode for custode tasks."
+(define-compilation-mode custode-command-mode "Custode"
+  "Major mode for custode command output buffers."
   ;; Kill the "Custode finished" message that compilation-handle-exit outputs.
   (setq-local inhibit-message t)
   ;; Add our finish function to handle things when the process ends.
   (setq-local compilation-finish-functions #'custode--compilation-finish-function))
 
 (defun custode--compilation-finish-function (buffer outstr)
-  "Finish handler for custode-task-mode.
+  "Finish handler for custode-command-mode.
 
 BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
   (let ((project-state (custode--get-project-state (custode--current-project-root))))
@@ -454,7 +454,7 @@ POSITION-FUNCTION is a function that positions the buffer afterwards."
       ;; go directly to `compilation-start'.
       (let* ((buffer (compilation-start (if args (concat command " " args)
                                           command)
-                                        'custode-task-mode))
+                                        'custode-command-mode))
              (project-state (custode--get-project-state project-root)))
         (if (assoc :running (cdr project-state))
             (setcdr (assoc :running (cdr project-state))
