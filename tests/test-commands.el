@@ -3,7 +3,7 @@
 (require 'assess)
 (require 'custode)
 
-(describe "task management"
+(describe "command management"
   :var (custode--commands)
   (before-each
     (setq custode--commands '())
@@ -44,7 +44,7 @@
                 '("banana") . ())))
 
   (describe "custode-add-command"
-    (it "should add tasks to current project"
+    (it "should add commands to current project"
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
       (shut-up (custode-add-command "the command"))
       (expect custode--commands
@@ -81,7 +81,7 @@
       (spy-on 'yes-or-no-p :and-return-value t)
       (shut-up (custode-add-command "the command")))
 
-    (it "should remove tasks from current project"
+    (it "should remove commands from current project"
       (shut-up (custode-delete-command "the command"))
       (expect (cdr (assoc "the-project/" custode--commands))
               :to-have-same-items-as

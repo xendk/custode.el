@@ -3,7 +3,7 @@
 (require 'assess)
 (require 'custode)
 
-(describe "running tasks"
+(describe "running commands"
   (before-each
     ;; Silence the load message.
     (spy-on 'custode-load))
@@ -43,12 +43,12 @@
       (expect 'custode--start :to-have-been-called-with "project" "the command" "the arguments" nil)))
 
   (describe "custode--start"
-    (it "runs task in background"
+    (it "runs command in background"
       (assess-with-preserved-buffer-list
        (custode--start "project" "true")
-       (wait-for-custode-tasks)
+       (wait-for-custode-commands)
 
-       ;; There should be a buffer for the task.
+       ;; There should be a buffer for the command.
        (expect (get-buffer (custode-buffer-name "project" "true"))
                :not :to-be nil)
        ;; But still only one window.
@@ -59,7 +59,7 @@
     (it "pops up on error"
       (assess-with-preserved-buffer-list
        (custode--start "project" "false")
-       (wait-for-custode-tasks)
+       (wait-for-custode-commands)
 
        (expect (get-buffer (custode-buffer-name "project" "false"))
                :not :to-be nil)
@@ -72,7 +72,7 @@
     (it "removes window again on success"
       (assess-with-preserved-buffer-list
        (custode--start "project" "false")
-       (wait-for-custode-tasks)
+       (wait-for-custode-commands)
 
        (expect (get-buffer (custode-buffer-name "project" "false"))
                :not :to-be nil)
@@ -83,7 +83,7 @@
                2)
 
        (custode--start "project" "false" "|| true")
-       (wait-for-custode-tasks)
+       (wait-for-custode-commands)
        (expect (length (window-list))
                :to-equal
                1)))
@@ -93,7 +93,7 @@
         (it "shows the beginning of the buffer"
           (assess-with-preserved-buffer-list
            (custode--start "project" "false")
-           (wait-for-custode-tasks)
+           (wait-for-custode-commands)
 
            (with-current-buffer (get-buffer (custode-buffer-name "project" "false"))
              (expect (window-point (get-buffer-window (current-buffer)))
@@ -103,9 +103,9 @@
         (it "shows the beginning of the buffer, on reruns"
           (assess-with-preserved-buffer-list
            (custode--start "project" "false")
-           (wait-for-custode-tasks)
+           (wait-for-custode-commands)
            (custode--start "project" "false")
-           (wait-for-custode-tasks)
+           (wait-for-custode-commands)
 
            (with-current-buffer (get-buffer (custode-buffer-name "project" "false"))
              (expect (window-point (get-buffer-window (current-buffer)))
@@ -116,7 +116,7 @@
         (it "shows the end of the buffer"
           (assess-with-preserved-buffer-list
            (custode--start "project" "false" nil 'custode--position-buffer-end)
-           (wait-for-custode-tasks)
+           (wait-for-custode-commands)
 
            (let* ((buffer (get-buffer (custode-buffer-name "project" "false")))
                   (window (get-buffer-window buffer))
@@ -133,9 +133,9 @@
         (it "shows the end of the buffer, on reruns"
             (assess-with-preserved-buffer-list
              (custode--start "project" "false" nil 'custode--position-buffer-end)
-             (wait-for-custode-tasks)
+             (wait-for-custode-commands)
              (custode--start "project" "false" nil 'custode--position-buffer-end)
-             (wait-for-custode-tasks)
+             (wait-for-custode-commands)
 
              (let* ((buffer (get-buffer (custode-buffer-name "project" "false")))
                     (window (get-buffer-window buffer))

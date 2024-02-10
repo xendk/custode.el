@@ -12,9 +12,9 @@
     (it "writes the file"
       (assess-with-filesystem
        '()
-       (setq tasks '(("task1" . ())
-                     ("task2" . ((:positioning-function . custode--position-buffer-end)))))
-       (custode--write-project-commands default-directory tasks)
+       (setq commands '(("task1" . ())
+                        ("task2" . ((:positioning-function . custode--position-buffer-end)))))
+       (custode--write-project-commands default-directory commands)
 
        (expect (assess-file (concat (file-name-as-directory default-directory) custode-save-file))
                :to-equal
@@ -27,11 +27,11 @@
     (it "writes the file in consistent order"
       (assess-with-filesystem
        '()
-       (setq tasks '(("task4" . ())
-                     ("task1" . ())
-                     ("task3" . ())
-                     ("task2" . ())))
-       (custode--write-project-commands default-directory tasks)
+       (setq commands '(("task4" . ())
+                        ("task1" . ())
+                        ("task3" . ())
+                        ("task2" . ())))
+       (custode--write-project-commands default-directory commands)
 
        (expect (assess-file (concat (file-name-as-directory default-directory) custode-save-file))
                :to-equal
@@ -42,11 +42,11 @@
  (\"task4\"))
 ")
 
-       (setq tasks '(("task" . ((:omega . "omega")
-                                (:beta . "beta")
-                                (:alpha . "alpha")
-                                (:gamma . "gamma")))))
-       (custode--write-project-commands default-directory tasks)
+       (setq commands '(("task" . ((:omega . "omega")
+                                   (:beta . "beta")
+                                   (:alpha . "alpha")
+                                   (:gamma . "gamma")))))
+       (custode--write-project-commands default-directory commands)
 
        (expect (assess-file (concat (file-name-as-directory default-directory) custode-save-file))
                :to-equal
@@ -58,7 +58,7 @@
   (:omega . \"omega\")))
 ")))
 
-    (it "deletes the file if no tasks"
+    (it "deletes the file if no commands"
       (assess-with-filesystem
        (list (list custode-save-file ";;; -*- lisp-data -*-
 ((\"task1\")
@@ -67,8 +67,8 @@
  (\"task3\"
   (:invalid . \"task three\")))
 "))
-       (setq tasks '())
-       (custode--write-project-commands default-directory tasks)
+       (setq commands '())
+       (custode--write-project-commands default-directory commands)
 
        (expect (file-exists-p (concat (file-name-as-directory default-directory) custode-save-file))
                :to-equal
@@ -77,8 +77,8 @@
     (it "quietly handles if the file doesn't exist"
         (assess-with-filesystem
          '()
-         (setq tasks '())
-         (custode--write-project-commands default-directory tasks)
+         (setq commands '())
+         (custode--write-project-commands default-directory commands)
 
          (expect (file-exists-p (concat (file-name-as-directory default-directory) custode-save-file))
                  :to-equal

@@ -1,8 +1,8 @@
 ;; For match-buffers.
 (require 'compat-29)
 
-(defun wait-for-custode-tasks (&optional delay)
-  "Wait for custode tasks to finish."
+(defun wait-for-custode-commands (&optional delay)
+  "Wait for custode commands to finish."
   (setq delay (or delay 0.01))
   (let ((buffers (match-buffers " *custode")))
     (while (seq-some
