@@ -63,6 +63,18 @@
       (expect (custode-add-command "the command")
               :to-throw 'error)))
 
+  (describe "custode-edit-command"
+    (before-each
+      (spy-on 'custode--current-project-root :and-return-value "the-project/")
+      (spy-on 'yes-or-no-p :and-return-value t)
+      (shut-up (custode-add-command "the command")))
+
+    (it "should replace command in current project"
+      (shut-up (custode-edit-command "the command" "new command"))
+      (expect (cdr (assoc "the-project/" custode--commands))
+              :to-have-same-items-as
+              '(("new command")))))
+
   (describe "custode-delete-command"
     (before-each
       (spy-on 'custode--current-project-root :and-return-value "the-project/")

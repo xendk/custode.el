@@ -67,6 +67,7 @@ you configured:
   command that can be run by the shell. New commands always starts out
   disabled, so adding a command wont make anything happen in itself.
 * `k`: Remove a command.
+* `e`: Edit command. Allows for changing the command but retain state.
 * `w`: Watch a command. This makes custode run this task whenever
   saving a file in the project. When run interactively, this will also
   trigger the command (can be suppressed with a prefix argument).

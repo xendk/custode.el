@@ -32,6 +32,20 @@
               '(("test" . ((:running . 1)))
                 ("test2" . ())))))
 
+  (describe "custode-edit-command"
+    (it "should move state to the new command"
+      (spy-on 'custode--current-project-root :and-return-value "test")
+      (shut-up (custode-add-command "the command"))
+      (setq command-state (custode--get-command-state "test" "the command"))
+      (push (cons :running 1) (cdr command-state))
+      (expect custode--command-states
+              :to-have-same-items-as
+              '(("test\0the command" . ((:running . 1)))))
+      (custode-edit-command "the command" "new command")
+      (expect custode--command-states
+              :to-have-same-items-as
+              '(("test\0new command" . ((:running . 1)))))))
+
   (describe "custode--get-command-state"
     (it "creates new task states"
       (expect (custode--get-command-state "test" "task")

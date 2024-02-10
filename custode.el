@@ -60,6 +60,7 @@ The format is:
   (let ((map (make-sparse-keymap)))
     (define-key map "c" 'custode-add-command)
     (define-key map "k" 'custode-delete-command)
+    (define-key map "e" 'custode-edit-command)
     (define-key map "w" 'custode-watch)
     (define-key map "W" 'custode-unwatch)
     (define-key map "a" 'custode-set-command-args)
@@ -130,6 +131,26 @@ it."
     (let ((project (custode--get-project project-root)))
       (push (cons command '()) (cdr project))
       (message "Created \"%s\"" command))))
+
+(defun custode-edit-command (command new-command)
+  "Edit COMMAND to NEW-COMMAND.
+
+Changes the command and carries state over."
+  (interactive
+   (let ((command (custode--completing-read-command "Edit command")))
+     (list
+      command
+      (read-string "New command: "
+                   command
+                   'custode-command-history))))
+  (let* ((project-root (custode--current-project-root))
+         (project (custode--get-project project-root))
+         (old-state-key (concat project-root "\0" command))
+         (new-state-key (concat project-root "\0" new-command)))
+    (setcar (assoc command (cdr project)) new-command)
+    ;; Move state over.
+    (when (assoc old-state-key custode--command-states)
+      (setcar (assoc old-state-key custode--command-states) new-state-key))))
 
 (defun custode-delete-command (command)
   "Delete COMMAND from the current project."
