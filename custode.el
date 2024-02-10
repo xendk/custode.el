@@ -72,7 +72,7 @@ The format is:
 (defvar custode-lighter
   '(:eval
     (when (and custode-mode
-               (custode--get-current-project-task-names))
+               (custode--get-current-project-commands))
       (let* ((project-state (custode--get-project-state (custode--current-project-root)))
              (running (cdr (assoc :running (cdr project-state)))))
         (if (and (numberp running) (> running 0))
@@ -92,7 +92,7 @@ Automatically set in relevant buffers by custode--start.")
 
 (defcustom custode-save-file
   ".custode"
-  "The file in the project directory to save tasks in.
+  "The file in the project directory to save commands in.
 This should _not_ be set via .dir-locals.el."
   :group 'custode
   :type 'file)
@@ -136,10 +136,10 @@ it."
       (message "Created \"%s\"" command))))
 
 (defun custode-delete-command (command)
-  "Delete a task from the current project."
+  "Delete COMMAND from the current project."
   (interactive
    (list
-    (custode--completing-read-task "Delete command")))
+    (custode--completing-read-command "Delete command")))
   (if (yes-or-no-p (format "Really delete \"%s\"? " command))
       (let* ((project-root (custode--current-project-root))
              (project (custode--get-project project-root)))
@@ -157,7 +157,7 @@ Interactively, the command is run immediately, unless called with
 a prefix argument."
   (interactive
    (list
-    (custode--completing-read-task "Enable")))
+    (custode--completing-read-command "Watch")))
   (let ((project-root (custode--current-project-root)))
     (custode--set-command-watching project-root command t)
     (when (and (called-interactively-p) (not current-prefix-arg))
@@ -171,7 +171,7 @@ Interactively, any output buffer is removed, unless called with a
 prefix argument."
   (interactive
    (list
-    (custode--completing-read-task "Disable")))
+    (custode--completing-read-command "Unwatch")))
   (let ((project-root (custode--current-project-root)))
     (custode--set-command-watching project-root command nil)
     (when (and (called-interactively-p) (not current-prefix-arg))
@@ -194,14 +194,14 @@ prefix argument."
   (let ((project-root (custode--current-project-root)))
     (unless project-root
       (user-error "Not in a project"))
-    (custode--write-project-tasks project-root (custode--get-current-project-task-names))
+    (custode--write-project-tasks project-root (custode--get-current-project-commands))
     (message "Saved project commands")))
 
 (defun custode-set-buffer-positioning (command positioning-function)
   "Set the positioning function for the Custode buffer."
   (interactive
    (list
-    (custode--completing-read-task "Set buffer positioning for")
+    (custode--completing-read-command "Set buffer positioning for")
     (intern (completing-read "Positioning function: "
                              (mapcar 'symbol-name custode-buffer-positioning-functions)
                              nil t))))
@@ -233,7 +233,7 @@ is being watched, unless called with a prefix argument.
 
 Command arguments persists for the duration of the Emacs session."
   (interactive
-   (let ((command (custode--completing-read-task "Set arguments for")))
+   (let ((command (custode--completing-read-command "Set arguments for")))
      (list
       command
       (read-string "Command arguments: "
@@ -354,8 +354,8 @@ Returns (PROJECT-ROOT . COMMANDS)."
     (custode-load))
   (assoc project-root custode--commands))
 
-(defun custode--get-current-project-task-names ()
-  "Get tasks of current project."
+(defun custode--get-current-project-commands ()
+  "Get commands of current project."
   (let ((project-root (custode--current-project-root)))
     (when project-root
       (cdr (custode--get-project project-root)))))
@@ -364,15 +364,14 @@ Returns (PROJECT-ROOT . COMMANDS)."
   "Set COMMAND watching state.
 
 PROJECT-ROOT is the project root and STATE is `t' or `nil'."
-  (let* ((project-tasks (or (cdr (custode--get-project project-root))
-                            (error "Unknown project %s" project-root)))
-         (task (assoc command project-tasks))
-         (task-state (custode--get-command-state project-root command)))
-    (unless task
-      (error "Unknown command \"%s\"" command))
-    (if (assoc :watching (cdr task-state))
-        (setf (cdr (assoc :watching (cdr task-state))) state)
-      (push (cons :watching state) (cdr task-state)))))
+  (let* ((commands (or (cdr (custode--get-project project-root))
+                       (error "Unknown project %s" project-root)))
+         (command-options (or (assoc command commands)
+                              (error "Unknown command \"%s\"" command)))
+         (command-state (custode--get-command-state project-root command)))
+    (if (assoc :watching (cdr command-state))
+        (setf (cdr (assoc :watching (cdr command-state))) state)
+      (push (cons :watching state) (cdr command-state)))))
 
 (defun custode--command-watching-p (project-root command)
   "Check whether command is watching."
@@ -396,7 +395,7 @@ Returns a list of commands."
   (let ((state (custode--get-command-state project-root command)))
     (cdr (assoc :args (cdr state)))))
 
-(defun custode--completing-read-task (prompt)
+(defun custode--completing-read-command (prompt)
   "Use `completing-read' to read a command in the current project."
   (unless (custode--current-project-root)
     (user-error "Not in a project"))
@@ -407,7 +406,7 @@ Returns a list of commands."
   (pcase flag
     ('metadata '(metadata (category . 'custode-task)
                           (affixation-function . custode--task-completion-table-affixation)))
-    (_ (all-completions str (custode--get-current-project-task-names) pred))))
+    (_ (all-completions str (custode--get-current-project-commands) pred))))
 
 (defun custode--task-completion-table-affixation (completions)
   (mapcar (lambda (c)
@@ -428,12 +427,11 @@ Returns a list of commands."
 
 Optionally supply COMMANDS to trigger these specific commands,
 regardless of whether they're enabled or not."
-  (let ((commands (cdr (custode--get-project project-root)))
-        (trigger-tasks (or commands (custode--get-watching-commands project-root)))
+  (let ((commands (or commands (custode--get-watching-commands project-root)))
         (default-directory project-root))
-    (dolist (command trigger-tasks)
-      (let* ((task (cdr (assoc command commands)))
-             (positioning-function (cdr (assoc :positioning-function task)))
+    (dolist (command commands)
+      (let* ((command-options (cdr (assoc command commands)))
+             (positioning-function (cdr (assoc :positioning-function command-options)))
              (args (custode--get-command-args project-root command)))
         (custode--start project-root command args positioning-function)))))
 
