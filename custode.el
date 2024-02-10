@@ -58,8 +58,8 @@ The format is:
 
 (defvar custode-prefix-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "c" 'custode-create-task)
-    (define-key map "k" 'custode-delete-task)
+    (define-key map "c" 'custode-add-command)
+    (define-key map "k" 'custode-delete-command)
     (define-key map "e" 'custode-enable-task)
     (define-key map "d" 'custode-disable-task)
     (define-key map "a" 'custode-set-task-args)
@@ -122,7 +122,7 @@ These functions are called with the buffer as the only argument"
   "Get the buffer name for the COMMAND in PROJECT-ROOT project."
   (concat " *custode " project-root " " command "*"))
 
-(defun custode-create-task (command)
+(defun custode-add-command (command)
   "Add a command to the current project.
 
 COMMAND is a command passed to the shell to run. Initially the
@@ -136,7 +136,7 @@ it."
       (push (cons command '()) (cdr project))
       (message "Created \"%s\"" command))))
 
-(defun custode-delete-task (command)
+(defun custode-delete-command (command)
   "Delete a task from the current project."
   (interactive
    (list
@@ -154,7 +154,7 @@ it."
 Enabled commands will automatically run when files in the project
 is saved.
 
-Initially, all commands, whether added with `custode-create-task'
+Initially, all commands, whether added with `custode-add-command'
 or loaded from `custode-save-file' will be disabled until
 manually enabled.
 
@@ -174,7 +174,7 @@ a prefix argument."
 
 Disabled commands will not be run when project files are saved.
 
-Initially, all commands, whether added with `custode-create-task'
+Initially, all commands, whether added with `custode-add-command'
 or loaded from `custode-save-file' will be disabled until
 manually enabled."
   (interactive

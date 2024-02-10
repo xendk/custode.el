@@ -30,8 +30,8 @@
   (describe "custode--get-project"
     (it "returns the requested project"
       (spy-on 'custode--current-project-root :and-return-value "project")
-      (shut-up (custode-create-task "task1")
-               (custode-create-task "task2"))
+      (shut-up (custode-add-command "task1")
+               (custode-add-command "task2"))
 
       (expect (custode--get-project "project")
               :to-have-same-items-as
@@ -43,16 +43,16 @@
                 :to-have-same-items-as
                 '("banana") . ())))
 
-  (describe "custode-create-task"
+  (describe "custode-add-command"
     (it "should add tasks to current project"
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
-      (shut-up (custode-create-task "the command"))
+      (shut-up (custode-add-command "the command"))
       (expect custode--commands
               :to-equal
               '(("the-project/" .
                  (("the command" . ())))))
 
-      (shut-up (custode-create-task "another command"))
+      (shut-up (custode-add-command "another command"))
       (expect (cdr (assoc "the-project/" custode--commands))
               :to-have-same-items-as
               '(("the command" . ())
@@ -60,17 +60,17 @@
 
     (it "errors when no project is active"
       (spy-on 'custode--current-project-root :and-return-value nil)
-      (expect (custode-create-task "the command")
+      (expect (custode-add-command "the command")
               :to-throw 'error)))
 
-  (describe "custode-delete-task"
+  (describe "custode-delete-command"
     (before-each
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
       (spy-on 'yes-or-no-p :and-return-value t)
-      (shut-up (custode-create-task "the command")))
+      (shut-up (custode-add-command "the command")))
 
     (it "should remove tasks from current project"
-      (shut-up (custode-delete-task "the command"))
+      (shut-up (custode-delete-command "the command"))
       (expect (cdr (assoc "the-project/" custode--commands))
               :to-have-same-items-as
               '())))
@@ -78,7 +78,7 @@
   (describe "custode-set-buffer-positioning"
     (before-each
       (spy-on 'custode--current-project-root :and-return-value "the-project/")
-      (shut-up (custode-create-task "the command")))
+      (shut-up (custode-add-command "the command")))
 
     (it "sets the buffer positioning"
       (custode-set-buffer-positioning "the command" 'custode--position-buffer-end)
