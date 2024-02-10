@@ -469,9 +469,13 @@ POSITION-FUNCTION is a function that positions the buffer afterwards."
   "Write project COMMANDS to `custode-save-file' file in PROJECT-ROOT.
 
 Deletes the file if COMMANDS are empty."
-  (let ((filename (concat (file-name-as-directory project-root) custode-save-file)))
+  (let ((filename (concat (file-name-as-directory project-root) custode-save-file))
+        (commands (sort commands (lambda (a b) (string< (car a) (car b))))))
     (if commands
         (with-temp-buffer
+          ;; Sort options.
+          (dolist (command commands)
+            (setf (cdr command) (sort (cdr command) (lambda (a b) (string< (car a) (car b))))))
           (insert ";;; -*- lisp-data -*-\n")
           (let ((print-length nil)
                 (print-level nil))

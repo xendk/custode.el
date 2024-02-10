@@ -24,6 +24,40 @@
   (:positioning-function . custode--position-buffer-end)))
 ")))
 
+    (it "writes the file in consistent order"
+      (assess-with-filesystem
+       '()
+       (setq tasks '(("task4" . ())
+                     ("task1" . ())
+                     ("task3" . ())
+                     ("task2" . ())))
+       (custode--write-project-commands default-directory tasks)
+
+       (expect (assess-file (concat (file-name-as-directory default-directory) custode-save-file))
+               :to-equal
+               ";;; -*- lisp-data -*-
+((\"task1\")
+ (\"task2\")
+ (\"task3\")
+ (\"task4\"))
+")
+
+       (setq tasks '(("task" . ((:omega . "omega")
+                                (:beta . "beta")
+                                (:alpha . "alpha")
+                                (:gamma . "gamma")))))
+       (custode--write-project-commands default-directory tasks)
+
+       (expect (assess-file (concat (file-name-as-directory default-directory) custode-save-file))
+               :to-equal
+               ";;; -*- lisp-data -*-
+((\"task\"
+  (:alpha . \"alpha\")
+  (:beta . \"beta\")
+  (:gamma . \"gamma\")
+  (:omega . \"omega\")))
+")))
+
     (it "deletes the file if no tasks"
       (assess-with-filesystem
        (list (list custode-save-file ";;; -*- lisp-data -*-
