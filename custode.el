@@ -89,7 +89,8 @@ The value of this variable is a mode line template as in
 (defvar custode-position-function
   "Function to call to position output buffer.
 
-Automatically set in relevant buffers by custode--start.")
+Automatically set in relevant buffers by custode--start."
+  nil)
 
 (defcustom custode-save-file
   ".custode"
@@ -230,15 +231,14 @@ prefix argument."
                              nil t))))
   (unless (member positioning-function custode-buffer-positioning-functions)
     (error "Unknown positioning function %s" positioning-function))
+
   (let* ((project-root (custode--current-project-root))
          (project-commands (or (cdr (custode--get-project project-root))
                                (error "Unknown project %s" project-root)))
-         (command (assoc command project-commands)))
+         (command (car (assoc command project-commands))))
     (unless command
       (error "Unknown command \"%s\"" command))
-    (if (assoc :positioning-function (cdr command))
-        (setf (cdr (assoc :positioning-function (cdr command))) positioning-function)
-      (push (cons :positioning-function positioning-function) (cdr command)))))
+    (custode--set-command-option project-root command :positioning-function positioning-function)))
 
 (defun custode-set-command-args (command args)
   "Set/unset command arguments for COMMAND in the current project.
@@ -346,6 +346,26 @@ Triggers running enabled commands if the file is in a project."
   (let ((current-project (project-current)))
     (when current-project
       (project-root current-project))))
+
+(defun custode--set-command-option (project-root command option value)
+  "Sets OPTION to VALUE for COMMAND in PROJECT-ROOT"
+  (let* ((project-commands (or (cdr (custode--get-project project-root))
+                               (error "Unknown project %s" project-root)))
+         (command (assoc command project-commands)))
+    (unless command
+      (error "Unknown command \"%s\"" command))
+    (if (assoc option (cdr command))
+        (setf (cdr (assoc option (cdr command))) value)
+      (push (cons option value) (cdr command)))))
+
+(defun custode--get-command-option (project-root command option)
+  "Get OPTION for COMMAND in PROJECT-ROOT"
+  (let* ((project-commands (or (cdr (custode--get-project project-root))
+                               (error "Unknown project %s" project-root)))
+         (command (assoc command project-commands)))
+    (unless command
+      (error "Unknown command \"%s\"" command))
+    (cdr (assoc option (cdr command)))))
 
 (defun custode--get-command-state (project-root command)
   "Returns COMMAND state for PROJECT-ROOT.
