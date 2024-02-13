@@ -474,8 +474,7 @@ regardless of whether they're enabled or not."
   (let ((commands (or commands (custode--get-watching-commands project-root)))
         (default-directory project-root))
     (dolist (command commands)
-      (let* ((command-options (cdr (assoc command commands)))
-             (positioning-function (cdr (assoc :positioning-function command-options)))
+      (let* ((positioning-function (custode--get-command-option project-root command :positioning-function))
              (args (custode--get-command-args project-root command)))
         (custode--start project-root command args positioning-function)))))
 
