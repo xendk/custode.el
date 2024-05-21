@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Global minor mode for running commands.
 - Running watched tasks on file save.
 - Show command output on failure, hide it on success.
-- Commands for creating, deleting, editing, watching and unwatching of
+- Commands for creating, deleting, editing, watching and un-watching of
   commands.
 - Mode-line lighter for buffers in projects with commands.
 - Lighter highlights when command is running.
@@ -21,3 +21,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prefix argument.
 - Deletes command buffer when disabling tasks.
 - Annotate command completions with watch state and arguments.
+- Automatically update .custode file on changes.

@@ -92,6 +92,12 @@ The value of this variable is a mode line template as in
 Automatically set in relevant buffers by custode--start."
   nil)
 
+(defcustom custode-autosave
+  t
+  "Whether to automatically save tasks on changes."
+  :group 'custode
+  :type 'boolean)
+
 (defcustom custode-save-file
   ".custode"
   "The file in the project directory to save commands in.
@@ -131,6 +137,7 @@ it."
       (user-error "Not in a project"))
     (let ((project (custode--get-project project-root)))
       (push (cons command '()) (cdr project))
+      (custode-autosave)
       (message "Created \"%s\"" command))))
 
 (defun custode-edit-command (command new-command)
@@ -157,6 +164,7 @@ Changes the command and carries state over."
                (not current-prefix-arg))
       (kill-buffer (custode-buffer-name project-root command))
       (custode--trigger project-root (list new-command)))
+    (custode-autosave)
     (message "Changed command")))
 
 (defun custode-delete-command (command)
@@ -168,6 +176,7 @@ Changes the command and carries state over."
       (let* ((project-root (custode--current-project-root))
              (project (custode--get-project project-root)))
         (setcdr project (assoc-delete-all command (cdr project)))
+        (custode-autosave)
         (message "Deleted \"%s\"" command))
     (message "Command not deleted")))
 
@@ -238,7 +247,9 @@ prefix argument."
          (command (car (assoc command project-commands))))
     (unless command
       (error "Unknown command \"%s\"" command))
-    (custode--set-command-option project-root command :positioning-function positioning-function)))
+    (custode--set-command-option project-root command :positioning-function positioning-function)
+    (custode-autosave)
+    (message "Set positioning function for \"%s\"" command)))
 
 (defun custode-set-command-args (command args)
   "Set/unset command arguments for COMMAND in the current project.
@@ -556,6 +567,11 @@ Deletes the file if COMMANDS are empty."
             (push (cons :positioning-function (cdr (assoc :positioning-function read-command-options))) new-command))
           (push (cons read-command new-command) commands))))
     commands))
+
+(defun custode-autosave ()
+  "Save commands if autosave is turned on."
+  (when custode-autosave
+    (custode-save)))
 
 (provide 'custode)
 ;;; custode.el ends here
