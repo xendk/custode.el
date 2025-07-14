@@ -22,7 +22,15 @@
 
 ;;; Commentary:
 
-;;
+;; Emacs centered "file watcher". See README.md for description and
+;; usage.
+
+;; Todo:
+;; - Change watch and unwatch to a custode-watch-toggle function.
+;; - Rename `custode-save-file' to `.custode.eld'. With auto-migration.
+;; - Add debounce so that opening magit with many unsaved files
+;;   doesn't re-run the command many times in a row.
+;; - Rewrite UI to use transient.
 
 ;;; Code:
 
