@@ -1,5 +1,7 @@
 ;; For match-buffers.
-(require 'compat-29)
+(when (version< emacs-version "30.0.0")
+  ;; Can't remember why I needed this.
+  (require 'compat-29))
 
 (defun wait-for-custode-commands (&optional delay)
   "Wait for custode commands to finish."

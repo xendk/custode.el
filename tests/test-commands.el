@@ -7,6 +7,8 @@
   :var (custode--commands)
   (before-each
     (setq custode--commands '())
+    ;; Disable autosave in tests.
+    (setq custode-autosave nil)
     ;; Silence the load message.
     (spy-on 'custode-load))
 
@@ -21,7 +23,13 @@
         ))
     (describe "with a project"
       (before-each
-        (spy-on 'project-current :and-return-value '(vc . "/some/path/")))
+        ;; The `project-current' return value changed in Emacs 30.
+        ;; This is what you have for mocking internals of another
+        ;; package.
+        (spy-on 'project-current :and-return-value
+                (if (version< emacs-version "30.0.0")
+                    '(vc . "/some/path/")
+                  '(vc Git "/some/path/"))))
       (it "returns the path"
         (expect (custode--current-project-root)
                 :to-equal
