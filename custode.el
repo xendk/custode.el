@@ -31,6 +31,7 @@
 ;; - Add debounce so that opening magit with many unsaved files
 ;;   doesn't re-run the command many times in a row.
 ;; - Rewrite UI to use transient.
+;; - Don't use `called-interactively-p' (see it's doc)
 
 ;;; Code:
 
@@ -41,28 +42,25 @@
   "List of known commands across all projects.
 
 The format is:
-((\"project_root\" . (
+\((\"project_root\" . (
   \"eldev test\" (
-    (:positioning-function . custode--position-buffer-end)))))
-")
+    (:positioning-function . custode--position-buffer-end)))))")
 
 (defvar custode--command-states '()
   "Stores runtime state of commands.
 
 The format is:
-((\"project_root\\0command\" . (
+\((\"project_root\\0command\" . (
     (:watching . t)
-)))
-")
+)))")
 
 (defvar custode--project-states '()
   "Stores runtime state of projects.
 
 The format is:
-((\"project_root\" . (
+\((\"project_root\" . (
     (:running . 0)
-)))
-")
+)))")
 
 (defvar custode-prefix-map
   (let ((map (make-sparse-keymap)))
@@ -239,7 +237,10 @@ prefix argument."
     (message "Saved project commands")))
 
 (defun custode-set-buffer-positioning (command positioning-function)
-  "Set the positioning function for the Custode buffer."
+  "Set the positioning function for the Custode buffer for COMMAND.
+
+POSITIONING-FUNCTION should be either custode--position-buffer-end or
+custode--position-buffer-beginning."
   (interactive
    (list
     (custode--completing-read-command "Set buffer positioning for")
@@ -367,7 +368,7 @@ Triggers running enabled commands if the file is in a project."
       (project-root current-project))))
 
 (defun custode--set-command-option (project-root command option value)
-  "Sets OPTION to VALUE for COMMAND in PROJECT-ROOT"
+  "Set OPTION to VALUE for COMMAND in PROJECT-ROOT."
   (let* ((project-commands (or (cdr (custode--get-project project-root))
                                (error "Unknown project %s" project-root)))
          (command (assoc command project-commands)))
@@ -378,7 +379,7 @@ Triggers running enabled commands if the file is in a project."
       (push (cons option value) (cdr command)))))
 
 (defun custode--get-command-option (project-root command option)
-  "Get OPTION for COMMAND in PROJECT-ROOT"
+  "Get OPTION for COMMAND in PROJECT-ROOT."
   (let* ((project-commands (or (cdr (custode--get-project project-root))
                                (error "Unknown project %s" project-root)))
          (command (assoc command project-commands)))
@@ -387,7 +388,7 @@ Triggers running enabled commands if the file is in a project."
     (cdr (assoc option (cdr command)))))
 
 (defun custode--get-command-state (project-root command)
-  "Returns COMMAND state for PROJECT-ROOT.
+  "Return COMMAND state for PROJECT-ROOT.
 
 Creates the state if not found."
   (let ((key (concat project-root "\0" command)))
@@ -397,7 +398,7 @@ Creates the state if not found."
     (assoc key custode--command-states)))
 
 (defun custode--get-project-state (project-root)
-  "Returns project state for PROJECT-ROOT.
+  "Return project state for PROJECT-ROOT.
 
 Creates the state if not found."
   (unless (assoc project-root custode--project-states)
@@ -425,18 +426,18 @@ Returns (PROJECT-ROOT . COMMANDS)."
 (defun custode--set-command-watching (project-root command state)
   "Set COMMAND watching state.
 
-PROJECT-ROOT is the project root and STATE is `t' or `nil'."
+PROJECT-ROOT is the project root and STATE is t or nil."
   (let* ((commands (or (cdr (custode--get-project project-root))
                        (error "Unknown project %s" project-root)))
-         (command-options (or (assoc command commands)
-                              (error "Unknown command \"%s\"" command)))
          (command-state (custode--get-command-state project-root command)))
+    (or (assoc command commands)
+        (error "Unknown command \"%s\"" command))
     (if (assoc :watching (cdr command-state))
         (setf (cdr (assoc :watching (cdr command-state))) state)
       (push (cons :watching state) (cdr command-state)))))
 
 (defun custode--command-watching-p (project-root command)
-  "Check whether command is watching."
+  "Check whether the COMMAND in PROJECT-ROOT is watching."
   (if (member command (custode--get-watching-commands project-root))
       t nil))
 
@@ -458,7 +459,9 @@ Returns a list of commands."
     (cdr (assoc :args (cdr state)))))
 
 (defun custode--completing-read-command (prompt)
-  "Use `completing-read' to read a command in the current project."
+  "Use `completing-read' to read a command in the current project.
+
+PROMPT is the prompt to use."
   (unless (custode--current-project-root)
     (user-error "Not in a project"))
   (unless (custode--get-current-project-commands)
@@ -466,13 +469,20 @@ Returns a list of commands."
   (completing-read (concat prompt ": ") #'custode--command-completion-table nil t))
 
 (defun custode--command-completion-table (str pred flag)
-  "Completion table for custode commands."
+  "Completion table for custode commands.
+
+Mostly for adding a affixation-function.
+
+STR, PRED and FLAG is defined by the completion system."
   (pcase flag
     ('metadata '(metadata (category . 'custode-command)
                           (affixation-function . custode--command-completion-table-affixation)))
     (_ (all-completions str (custode--get-current-project-commands) pred))))
 
 (defun custode--command-completion-table-affixation (completions)
+  "Affixation function to decorate COMPLETIONS.
+
+Adds a checkmark to watched commands and the current arguments."
   (mapcar (lambda (c)
             (let* ((project-root (custode--current-project-root))
                    (commands (cdr (custode--get-project project-root)))
