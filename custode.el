@@ -139,8 +139,6 @@ After adding a command, use `custode-watch' to continuously run
 it."
   (interactive "sCommand: ")
   (let ((project-root (custode--current-project-root)))
-    (unless project-root
-      (user-error "Not in a project"))
     (let ((project (custode--get-project project-root)))
       (push (cons command '()) (cdr project))
       (custode-autosave)
@@ -221,8 +219,6 @@ prefix argument."
   "Load project commands from `custode-save-file' file in project root."
   (interactive)
   (let ((project-root (custode--current-project-root)))
-    (unless project-root
-      (user-error "Not in a project"))
     (setcdr (custode--get-project project-root)
             (custode--read-project-commands project-root))
     (message "Loaded project commands.")))
@@ -231,8 +227,6 @@ prefix argument."
   "Write project commands to `custode-save-file' file in project root."
   (interactive)
   (let ((project-root (custode--current-project-root)))
-    (unless project-root
-      (user-error "Not in a project"))
     (custode--write-project-commands project-root (custode--get-current-project-commands))
     (message "Saved project commands")))
 
@@ -357,15 +351,15 @@ of the window."
   "After save hook for custode-mode.
 
 Triggers running enabled commands if the file is in a project."
-  (let ((project-root (custode--current-project-root)))
-    (when project-root
-      (custode--trigger project-root))))
+  (ignore-errors
+    (custode--trigger (custode--current-project-root))))
 
 (defun custode--current-project-root ()
-  "Get the project root of the current project, or nil if no project."
+  "Get the project root of the current project, or signals error if no project."
   (let ((current-project (project-current)))
-    (when current-project
-      (project-root current-project))))
+    (unless current-project
+      (user-error "Not in a project"))
+    (project-root current-project)))
 
 (defun custode--set-command-option (project-root command option value)
   "Set OPTION to VALUE for COMMAND in PROJECT-ROOT."
@@ -420,8 +414,7 @@ Returns (PROJECT-ROOT . COMMANDS)."
 (defun custode--get-current-project-commands ()
   "Get commands of current project."
   (let ((project-root (custode--current-project-root)))
-    (when project-root
-      (cdr (custode--get-project project-root)))))
+    (cdr (custode--get-project project-root))))
 
 (defun custode--set-command-watching (project-root command state)
   "Set COMMAND watching state.
@@ -462,8 +455,6 @@ Returns a list of commands."
   "Use `completing-read' to read a command in the current project.
 
 PROMPT is the prompt to use."
-  (unless (custode--current-project-root)
-    (user-error "Not in a project"))
   (unless (custode--get-current-project-commands)
     (user-error "No commands defined in project"))
   (completing-read (concat prompt ": ") #'custode--command-completion-table nil t))

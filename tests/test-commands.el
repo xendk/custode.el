@@ -16,11 +16,9 @@
     (describe "without a project"
       (before-each
         (spy-on 'project-current :and-return-value nil))
-      (it "returns nil"
+      (it "throws"
         (expect (custode--current-project-root)
-                :to-equal
-                nil)
-        ))
+                :to-throw)))
     (describe "with a project"
       (before-each
         ;; The `project-current' return value changed in Emacs 30.
@@ -67,7 +65,7 @@
                 ("another command" . ()))))
 
     (it "errors when no project is active"
-      (spy-on 'custode--current-project-root :and-return-value nil)
+      (spy-on 'custode--current-project-root :and-throw-error 'user-error)
       (expect (custode-add-command "the command")
               :to-throw 'error)))
 
