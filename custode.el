@@ -339,7 +339,6 @@ of the window."
                         (goto-char (point-max))
                         (vertical-motion (- (floor (/ (window-height window) 2))))
                         (point)))))
-    (message "%S" new-point)
     (set-window-point window new-point)))
 
 (defun custode--position-buffer-beginning (buffer)
