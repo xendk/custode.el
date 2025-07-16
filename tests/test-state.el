@@ -10,9 +10,9 @@
     (setq custode--command-states '())
     )
 
-  (describe "custode--get-project-state"
+  (describe "custode--current-project-state"
     (it "creates new project states"
-      (expect (custode--get-project-state "test")
+      (expect (custode--current-project-state "test")
               :to-equal
               '("test" . ()))
       (expect custode--project-states
@@ -21,16 +21,29 @@
 
     (it "allows for modifying project states"
       ;; Unrelated project.
-      (custode--get-project-state "test2")
-      (setq project (custode--get-project-state "test"))
+      (custode--current-project-state "test2")
+      (setq project (custode--current-project-state "test"))
       (push (cons :running 1) (cdr project))
-      (expect (custode--get-project-state "test")
+      (expect (custode--current-project-state "test")
               :to-equal
               '("test" . ((:running . 1))))
       (expect custode--project-states
               :to-have-same-items-as
               '(("test" . ((:running . 1)))
                 ("test2" . ())))))
+
+  (describe "custode--(get|set)-project-state"
+    (it "allows for setting and getting state"
+      (custode--set-project-state :some-key "value" "test")
+      (expect (custode--get-project-state :some-key "test")
+              :to-equal "value")
+      (expect (custode--get-project-state :someother-key "test")
+              :to-equal nil)
+      (expect (custode--get-project-state :some-key "test2")
+              :to-equal nil)
+      (custode--set-project-state :some-key nil "test")
+      (expect (custode--get-project-state :some-key "test")
+              :to-equal nil)))
 
   (describe "custode-edit-command"
     (it "should move state to the new command"

@@ -79,8 +79,7 @@ The format is:
   '(:eval
     (when (and custode-mode
                (custode--get-current-project-commands))
-      (let* ((project-state (custode--get-project-state (custode--current-project-root)))
-             (running (cdr (assoc :running (cdr project-state)))))
+      (let* ((running (custode--get-project-state :running (custode--current-project-root))))
         (if (and (numberp running) (> running 0))
             (propertize " 👁" 'face 'compilation-mode-line-run)
           " 👁"))))
@@ -311,10 +310,8 @@ Command arguments persists for the duration of the Emacs session."
   "Finish handler for custode-command-mode.
 
 BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
-  (let ((project-state (custode--get-project-state (custode--current-project-root))))
-    (when (assoc :running (cdr project-state))
-      (setcdr (assoc :running (cdr project-state))
-              (1- (cdr (assoc :running (cdr project-state)))))))
+  (when-let* ((running (custode--get-project-state :running (custode--current-project-root))))
+    (custode--set-project-state :running (1- running) (custode--current-project-root)))
   (force-mode-line-update t)
   (let ((buffer-window (get-buffer-window buffer t)))
     (if (string-match "finished" outstr)
@@ -387,20 +384,32 @@ Triggers running enabled commands if the file is in a project."
   "Return COMMAND state for PROJECT-ROOT.
 
 Creates the state if not found."
-  (let ((key (concat project-root "\0" command)))
+  (let ((key (custode--commmand-state-key project-root command)))
     (unless (assoc key custode--command-states)
       (let ((val (copy-tree '())))
         (push (cons key val) custode--command-states)))
     (assoc key custode--command-states)))
 
-(defun custode--get-project-state (project-root)
+(defun custode--current-project-state (project-root)
   "Return project state for PROJECT-ROOT.
 
-Creates the state if not found."
+Creates the project state if not found."
   (unless (assoc project-root custode--project-states)
     (let ((val (copy-tree '())))
       (push (cons project-root val) custode--project-states)))
   (assoc project-root custode--project-states))
+
+(defun custode--get-project-state (key project-root)
+  "Get the KEY project state in PROJECT-ROOT."
+  (cdr (assoc key (cdr (custode--current-project-state project-root)))))
+
+(defun custode--set-project-state (key value project-root)
+  "Set the KEY project state to VALUE in PROJECT-ROOT."
+  (if value
+      (if (custode--get-project-state key project-root)
+          (setcdr (custode--get-project-state key project-root) value)
+        (push (cons key value) (cdr (custode--current-project-state project-root))))
+    (assoc-delete-all key (custode--current-project-state project-root))))
 
 (defun custode--get-project (project-root)
   "Get PROJECT-ROOT project.
@@ -524,12 +533,9 @@ POSITION-FUNCTION is a function that positions the buffer afterwards."
       ;; go directly to `compilation-start'.
       (let* ((buffer (compilation-start (if args (concat command " " args)
                                           command)
-                                        'custode-command-mode))
-             (project-state (custode--get-project-state project-root)))
-        (if (assoc :running (cdr project-state))
-            (setcdr (assoc :running (cdr project-state))
-                    (1+ (cdr (assoc :running (cdr project-state)))))
-          (push (cons :running 1) (cdr project-state)))
+                                        'custode-command-mode)))
+        (if-let* ((running (custode--get-project-state :running (custode--current-project-root))))
+            (custode--set-project-state :running (1+ running) (custode--current-project-root)))
         (with-current-buffer buffer
           (setq custode-position-function
                 (or position-function 'custode--position-buffer-beginning))))
