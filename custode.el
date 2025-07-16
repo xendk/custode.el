@@ -465,13 +465,13 @@ PROJECT-ROOT is the project root and STATE is t or nil."
   "Get watching commands for PROJECT-ROOT.
 
 Returns a list of commands."
-  (let ((commands (alist-get project-root custode--commands nil nil 'equal))
-        (watching (list)))
-    (if commands
-        (dolist (command commands)
-          (when (custode--get-command-state project-root (car command) :watching)
-            (push (car command) watching))))
-    watching))
+  (when-let* ((commands (alist-get project-root custode--commands nil nil 'equal)))
+    (delq nil
+          (mapcar
+           (lambda (command)
+             (when (custode--get-command-state project-root (car command) :watching)
+               (car command)))
+           commands))))
 
 (defun custode--completing-read-command (prompt)
   "Use `completing-read' to read a command in the current project.
@@ -515,9 +515,10 @@ regardless of whether they're enabled or not."
   (let ((commands (or commands (custode--get-watching-commands project-root)))
         (default-directory project-root))
     (dolist (command commands)
-      (let* ((positioning-function (custode--get-command-option project-root command :positioning-function))
-             (args (custode--get-command-state project-root command :args)))
-        (custode--start project-root command args positioning-function)))))
+      (custode--start project-root
+                      command
+                      (custode--get-command-state project-root command :args)
+                      (custode--get-command-option project-root command :positioning-function)))))
 
 (defun custode--start (project-root command &optional args position-function)
   "Start COMMAND in PROJECT-ROOT, optionally with ARGS arguments.

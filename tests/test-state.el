@@ -127,6 +127,7 @@
                                   (("task1" . ()))))))
       (setq custode--command-states (copy-tree
                                      '(("project\0task1" . ((:watching t)))
+                                       ("project\0task2" . ((:nothing t)))
                                        ("project2\0task1" . ((:watching t)))))))
 
     (describe "custode--command-watching-p"
@@ -145,6 +146,9 @@
     (describe "custode--get-watching-commands"
       (it "returns watched commands"
         (expect (custode--get-watching-commands "project")
+                :to-have-same-items-as
+                '("task1"))
+        (expect (custode--get-watching-commands "project2")
                 :to-have-same-items-as
                 '("task1"))))
 
