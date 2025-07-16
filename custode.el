@@ -31,6 +31,8 @@
 ;; - Add debounce so that opening magit with many unsaved files
 ;;   doesn't re-run the command many times in a row.
 ;; - Rewrite UI to use transient.
+;; - Use https://github.com/troyp/asoc.el to make the worst assoc list
+;;   juggling more readable.
 
 ;;; Code:
 
@@ -390,46 +392,45 @@ Creates the state if not found."
         (push (cons key val) custode--command-states)))
     (assoc key custode--command-states)))
 
-(defun custode--set-command-state (project-root command key value)
-  "Set the KEY state for the COMMAND in PROJECT-ROOT to VALUE."
-  (let ((state (custode--current-command-state project-root command)))
-    (if value
-        (if (assoc key (cdr state))
-            (setf (cdr (assoc key (cdr state))) value)
-          (push (cons key value) (cdr state)))
-      ;; If nil value, delete key.
-      (setf (cdr state) (assoc-delete-all key (cdr state)))
-      ;; TODO a bit inefficient to delete the list that
-      ;; `custode--current-command-state' might just have added.
-      (when (= 1 (length state))
-        (setq custode--command-states
-              (assoc-delete-all (custode--commmand-state-key project-root command) custode--command-states))))))
-
 (defun custode--get-command-state (project-root command key)
   "Get the KEY state of the COMMAND in PROJECT-ROOT."
-  (let ((state (custode--current-command-state project-root command)))
-    (cdr (assoc key (cdr state)))))
+  (when-let* ((state-key (custode--commmand-state-key project-root command))
+              (command-state (assoc state-key custode--command-states)))
+    (cdr (assoc key (cdr command-state)))))
 
-(defun custode--current-project-state (project-root)
-  "Return project state for PROJECT-ROOT.
-
-Creates the project state if not found."
-  (unless (assoc project-root custode--project-states)
-    (let ((val (copy-tree '())))
-      (push (cons project-root val) custode--project-states)))
-  (assoc project-root custode--project-states))
+(defun custode--set-command-state (project-root command key value)
+  "Set the KEY state for the COMMAND in PROJECT-ROOT to VALUE."
+  (let* ((state-key (custode--commmand-state-key project-root command))
+         (command-state (or (assoc state-key custode--command-states) (cons state-key (list)))))
+    (if value
+        (if-let* ((element (assoc key command-state)))
+            (setcdr element value)
+          (push (cons key value) (cdr command-state)))
+      (setq command-state (assoc-delete-all key command-state)))
+    (if (cdr command-state)
+        (if-let* ((state (assoc state-key custode--command-states)))
+            (setcdr state (cdr command-state))
+          (push command-state custode--command-states))
+      (setq custode--command-states (assoc-delete-all state-key custode--command-states)))))
 
 (defun custode--get-project-state (project-root key)
   "Get the KEY project state in PROJECT-ROOT."
-  (cdr (assoc key (cdr (custode--current-project-state project-root)))))
+  (when-let* ((project-state (assoc project-root custode--project-states)))
+    (cdr (assoc key (cdr project-state)))))
 
 (defun custode--set-project-state (project-root key value)
   "Set the KEY project state to VALUE in PROJECT-ROOT."
-  (if value
-      (if (custode--get-project-state project-root key)
-          (setcdr (custode--get-project-state project-root key) value)
-        (push (cons key value) (cdr (custode--current-project-state project-root))))
-    (assoc-delete-all key (custode--current-project-state project-root))))
+  (let ((project-state (or (assoc project-root custode--project-states) (cons project-root (list)))))
+    (if value
+        (if-let* ((element (assoc key project-state)))
+            (setcdr element value)
+          (push (cons key value) (cdr project-state)))
+      (setq project-state (assoc-delete-all key project-state)))
+    (if (cdr project-state)
+        (if-let* ((state (assoc project-root custode--project-states)))
+            (setcdr state (cdr project-state))
+          (push project-state custode--project-states))
+      (setq custode--project-states (assoc-delete-all project-root custode--project-states)))))
 
 (defun custode--get-project (project-root)
   "Get PROJECT-ROOT project.

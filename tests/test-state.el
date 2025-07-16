@@ -8,29 +8,7 @@
   (before-each
     (setq custode--project-states '())
     (setq custode--command-states '())
-    )
-
-  (describe "custode--current-project-state"
-    (it "creates new project states"
-      (expect (custode--current-project-state "test")
-              :to-equal
-              '("test" . ()))
-      (expect custode--project-states
-              :to-equal
-              '(("test" . ()))))
-
-    (it "allows for modifying project states"
-      ;; Unrelated project.
-      (custode--current-project-state "test2")
-      (setq project (custode--current-project-state "test"))
-      (push (cons :running 1) (cdr project))
-      (expect (custode--current-project-state "test")
-              :to-equal
-              '("test" . ((:running . 1))))
-      (expect custode--project-states
-              :to-have-same-items-as
-              '(("test" . ((:running . 1)))
-                ("test2" . ())))))
+    (setq custode-autosave nil))
 
   (describe "custode--(get|set)-project-state"
     (it "allows for setting and getting state"
@@ -43,7 +21,11 @@
               :to-equal nil)
       (custode--set-project-state "test" :some-key nil)
       (expect (custode--get-project-state "test" :some-key)
-              :to-equal nil)))
+              :to-equal nil)
+      ;; Ensure we don't have lingering empty projects.
+      (expect custode--project-states
+              :to-have-same-items-as
+              nil)))
 
   (describe "custode-edit-command"
     (it "should move state to the new command"
@@ -101,7 +83,7 @@
       (custode--set-command-state "test" "task" :other nil)
       (expect custode--command-states
               :to-have-same-items-as
-              '())))
+              nil)))
 
   (describe "custode--get-command-state"
     (it "allows for getting command state"
@@ -113,6 +95,18 @@
               :to-equal t)
       (expect (custode--get-command-state "test" "task" :something)
               :to-equal nil)))
+
+  (describe "custode--(get|set)-command-state"
+    (it "cleans up empty states"
+      (custode--set-command-state "test" "task2" :something t)
+      (custode--set-command-state "test" "task" :watching t)
+      (custode--set-command-state "test" "task2" :something nil)
+      (custode--set-command-state "test" "task" :watching nil)
+      (custode--get-command-state "test" "task" :watching)
+      (custode--get-command-state "test" "task2" :watching)
+      (expect custode--command-states
+              :to-have-same-items-as
+              nil)))
 
   (describe "command :watching state"
     :var (custode--commands custode--command-states)
@@ -198,7 +192,7 @@
         (shut-up (custode-unwatch "task1"))
         (expect (custode--get-watching-commands "project")
                 :to-have-same-items-as
-                '()))
+                nil))
 
       (it "errors on unknown project"
         (spy-on 'custode--current-project-root :and-return-value nil)
@@ -242,4 +236,4 @@
         (custode-set-command-args "task" "")
         (expect custode--command-states
                 :to-have-same-items-as
-                '())))))
+                nil)))))
