@@ -49,7 +49,7 @@
     (it "should move state to the new command"
       (spy-on 'custode--current-project-root :and-return-value "test")
       (shut-up (custode-add-command "the command"))
-      (setq command-state (custode--get-command-state "test" "the command"))
+      (setq command-state (custode--current-command-state "test" "the command"))
       (push (cons :running 1) (cdr command-state))
       (expect custode--command-states
               :to-have-same-items-as
@@ -59,9 +59,9 @@
               :to-have-same-items-as
               '(("test\0new command" . ((:running . 1)))))))
 
-  (describe "custode--get-command-state"
+  (describe "custode--current-command-state"
     (it "creates new command states"
-      (expect (custode--get-command-state "test" "task")
+      (expect (custode--current-command-state "test" "task")
               :to-equal
               '("test\0task" . ()))
       (expect custode--command-states
@@ -70,16 +70,49 @@
 
     (it "allows for modifying command states"
       ;; Unrelated task.
-      (custode--get-command-state "test" "task2")
-      (setq command-state (custode--get-command-state "test" "task"))
+      (custode--current-command-state "test" "task2")
+      (setq command-state (custode--current-command-state "test" "task"))
       (push (cons :enabled t) (cdr command-state))
-      (expect (custode--get-command-state "test" "task")
+      (expect (custode--current-command-state "test" "task")
               :to-equal
               '("test\0task" . ((:enabled . t))))
       (expect custode--command-states
               :to-have-same-items-as
               '(("test\0task" . ((:enabled . t)))
                 ("test\0task2" . ())))))
+
+
+  (describe "custode--set-command-state"
+    (it "allows for setting command states"
+      (custode--set-command-state "test" "task2" :something t)
+      (custode--set-command-state "test" "task" :watching t)
+      (expect custode--command-states
+              :to-have-same-items-as
+              '(("test\0task" . ((:watching . t)))
+                ("test\0task2" . ((:something .  t))))))
+
+    (it "unsets when given a nil value"
+      (setq custode--command-states '(("test\0task" . ((:watching . t) (:other . t)))))
+      (custode--set-command-state "test" "task" :watching nil)
+      (expect custode--command-states
+              :to-have-same-items-as
+              '(("test\0task" . ((:other . t)))))
+
+      (custode--set-command-state "test" "task" :other nil)
+      (expect custode--command-states
+              :to-have-same-items-as
+              '())))
+
+  (describe "custode--get-command-state"
+    (it "allows for getting command state"
+      (setq custode--command-states '(("test\0task" . ((:watching . t)))
+                                      ("test\0task2" . ((:something .  t)))))
+      (expect (custode--get-command-state "test" "task" :watching)
+              :to-equal t)
+      (expect (custode--get-command-state "test" "task2" :something)
+              :to-equal t)
+      (expect (custode--get-command-state "test" "task" :something)
+              :to-equal nil)))
 
   (describe "command :watching state"
     :var (custode--commands custode--command-states)
@@ -205,7 +238,7 @@
         (custode-set-command-args "task" "")
         (expect custode--command-states
                 :to-have-same-items-as
-                '(("project\0task" . ())))))
+                '())))
 
     (describe "custode--get-command-args"
       (it "returns nil when no args is set"

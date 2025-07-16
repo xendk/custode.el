@@ -280,11 +280,8 @@ Command arguments persists for the duration of the Emacs session."
                    (custode--get-command-args (custode--current-project-root) command)
                    'custode-args-history))))
   (let* ((args (string-trim args))
-         (project-root (custode--current-project-root))
-         (state (custode--get-command-state project-root command)))
-    (if (equal args "")
-        (setf (cdr state) (assoc-delete-all :args (cdr state)))
-      (push (cons :args args) (cdr state)))
+         (project-root (custode--current-project-root)))
+    (custode--set-command-state project-root command :args (if (equal args "") nil args))
     (when (and (called-interactively-p 'any)
                (not current-prefix-arg)
                (custode--command-watching-p project-root command))
@@ -383,7 +380,7 @@ Triggers running enabled commands if the file is in a project."
         (error "Unknown command \"%s\"" command))
       (cdr (assoc option (cdr command))))))
 
-(defun custode--get-command-state (project-root command)
+(defun custode--current-command-state (project-root command)
   "Return COMMAND state for PROJECT-ROOT.
 
 Creates the state if not found."
@@ -392,6 +389,26 @@ Creates the state if not found."
       (let ((val (copy-tree '())))
         (push (cons key val) custode--command-states)))
     (assoc key custode--command-states)))
+
+(defun custode--set-command-state (project-root command key value)
+  "Set the KEY state for the COMMAND in PROJECT-ROOT to VALUE."
+  (let ((state (custode--current-command-state project-root command)))
+    (if value
+        (if (assoc key (cdr state))
+            (setf (cdr (assoc key (cdr state))) value)
+          (push (cons key value) (cdr state)))
+      ;; If nil value, delete key.
+      (setf (cdr state) (assoc-delete-all key (cdr state)))
+      ;; TODO a bit inefficient to delete the list that
+      ;; `custode--current-command-state' might just have added.
+      (when (= 1 (length state))
+        (setq custode--command-states
+              (assoc-delete-all (custode--commmand-state-key project-root command) custode--command-states))))))
+
+(defun custode--get-command-state (project-root command key)
+  "Get the KEY state of the COMMAND in PROJECT-ROOT."
+  (let ((state (custode--current-command-state project-root command)))
+    (cdr (assoc key (cdr state)))))
 
 (defun custode--current-project-state (project-root)
   "Return project state for PROJECT-ROOT.
@@ -435,12 +452,9 @@ Returns (PROJECT-ROOT . COMMANDS)."
 
 PROJECT-ROOT is the project root and STATE is t or nil."
   (custode-with-current-project
-    (let* ((command-state (custode--get-command-state project-root command)))
-      (or (assoc command (cdr project))
-          (error "Unknown command \"%s\"" command))
-      (if (assoc :watching (cdr command-state))
-          (setf (cdr (assoc :watching (cdr command-state))) state)
-        (push (cons :watching state) (cdr command-state))))))
+    (or (assoc command (cdr project))
+        (error "Unknown command \"%s\"" command))
+    (custode--set-command-state project-root command :watching state)))
 
 (defun custode--command-watching-p (project-root command)
   "Check whether the COMMAND in PROJECT-ROOT is watching."
@@ -455,14 +469,13 @@ Returns a list of commands."
         (watching (list)))
     (if commands
         (dolist (command commands)
-          (when (cdr (assoc :watching (cdr (custode--get-command-state project-root (car command)))))
+          (when (custode--get-command-state project-root (car command) :watching)
             (push (car command) watching))))
     watching))
 
 (defun custode--get-command-args (project-root command)
   "Get the currently set arguments for the PROJECT-ROOT COMMAND."
-  (let ((state (custode--get-command-state project-root command)))
-    (cdr (assoc :args (cdr state)))))
+  (custode--get-command-state project-root command :args))
 
 (defun custode--completing-read-command (prompt)
   "Use `completing-read' to read a command in the current project.
