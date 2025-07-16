@@ -156,8 +156,8 @@ Changes the command and carries state over."
                    'custode-command-history))))
   (let* ((project-root (custode--current-project-root))
          (project (custode--get-project project-root))
-         (old-state-key (concat project-root "\0" command))
-         (new-state-key (concat project-root "\0" new-command)))
+         (old-state-key (custode--commmand-state-key project-root command))
+         (new-state-key (custode--commmand-state-key project-root new-command)))
     (setcar (assoc command (cdr project)) new-command)
     ;; Move state over.
     (when (assoc old-state-key custode--command-states)
@@ -358,6 +358,10 @@ Triggers running enabled commands if the file is in a project."
     (unless current-project
       (user-error "Not in a project"))
     (project-root current-project)))
+
+(defun custode--commmand-state-key (project-root command)
+  "Get the state key of COMMAND in PROJECT-ROOT."
+  (concat project-root "\0" command))
 
 (defun custode--set-command-option (project-root command option value)
   "Set OPTION to VALUE for COMMAND in PROJECT-ROOT."
