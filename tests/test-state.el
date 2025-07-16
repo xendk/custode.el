@@ -34,15 +34,15 @@
 
   (describe "custode--(get|set)-project-state"
     (it "allows for setting and getting state"
-      (custode--set-project-state :some-key "value" "test")
-      (expect (custode--get-project-state :some-key "test")
+      (custode--set-project-state "test" :some-key "value")
+      (expect (custode--get-project-state "test" :some-key)
               :to-equal "value")
-      (expect (custode--get-project-state :someother-key "test")
+      (expect (custode--get-project-state "test" :someother-key)
               :to-equal nil)
-      (expect (custode--get-project-state :some-key "test2")
+      (expect (custode--get-project-state "test2" :some-key)
               :to-equal nil)
-      (custode--set-project-state :some-key nil "test")
-      (expect (custode--get-project-state :some-key "test")
+      (custode--set-project-state "test" :some-key nil)
+      (expect (custode--get-project-state "test" :some-key)
               :to-equal nil)))
 
   (describe "custode-edit-command"

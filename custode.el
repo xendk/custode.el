@@ -79,7 +79,7 @@ The format is:
   '(:eval
     (when (and custode-mode
                (custode--get-current-project-commands))
-      (let* ((running (custode--get-project-state :running (custode--current-project-root))))
+      (let* ((running (custode--get-project-state (custode--current-project-root) :running)))
         (if (and (numberp running) (> running 0))
             (propertize " 👁" 'face 'compilation-mode-line-run)
           " 👁"))))
@@ -312,8 +312,8 @@ Command arguments persists for the duration of the Emacs session."
   "Finish handler for custode-command-mode.
 
 BUFFER is the process buffer, OUTSTR is compilation-mode's result string."
-  (when-let* ((running (custode--get-project-state :running (custode--current-project-root))))
-    (custode--set-project-state :running (1- running) (custode--current-project-root)))
+  (when-let* ((running (custode--get-project-state (custode--current-project-root) :running)))
+    (custode--set-project-state (custode--current-project-root) :running (1- running)))
   (force-mode-line-update t)
   (let ((buffer-window (get-buffer-window buffer t)))
     (if (string-match "finished" outstr)
@@ -419,15 +419,15 @@ Creates the project state if not found."
       (push (cons project-root val) custode--project-states)))
   (assoc project-root custode--project-states))
 
-(defun custode--get-project-state (key project-root)
+(defun custode--get-project-state (project-root key)
   "Get the KEY project state in PROJECT-ROOT."
   (cdr (assoc key (cdr (custode--current-project-state project-root)))))
 
-(defun custode--set-project-state (key value project-root)
+(defun custode--set-project-state (project-root key value)
   "Set the KEY project state to VALUE in PROJECT-ROOT."
   (if value
-      (if (custode--get-project-state key project-root)
-          (setcdr (custode--get-project-state key project-root) value)
+      (if (custode--get-project-state project-root key)
+          (setcdr (custode--get-project-state project-root key) value)
         (push (cons key value) (cdr (custode--current-project-state project-root))))
     (assoc-delete-all key (custode--current-project-state project-root))))
 
@@ -545,8 +545,8 @@ POSITION-FUNCTION is a function that positions the buffer afterwards."
       (let* ((buffer (compilation-start (if args (concat command " " args)
                                           command)
                                         'custode-command-mode)))
-        (if-let* ((running (custode--get-project-state :running (custode--current-project-root))))
-            (custode--set-project-state :running (1+ running) (custode--current-project-root)))
+        (if-let* ((running (custode--get-project-state (custode--current-project-root) :running)))
+            (custode--set-project-state (custode--current-project-root) :running (1+ running)))
         (with-current-buffer buffer
           (setq custode-position-function
                 (or position-function 'custode--position-buffer-beginning))))
