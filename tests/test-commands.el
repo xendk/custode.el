@@ -99,10 +99,10 @@
       (shut-up (custode-add-command "the command"))
       (shut-up (custode-add-command "another command")))
     (it "set and gets options on commands"
-      (custode--set-command-option "the-project/" "the command" :test "value")
-      (expect (custode--get-command-option "the-project/" "the command" :test)
+      (custode--set-command-option "the command" :test "value")
+      (expect (custode--get-command-option "the command" :test)
               :to-equal "value")
-      (expect (custode--get-command-option "the-project/" "another command" :test)
+      (expect (custode--get-command-option "another command" :test)
               :to-be nil)))
 
   (describe "custode-set-buffer-positioning"

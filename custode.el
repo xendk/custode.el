@@ -255,7 +255,7 @@ custode--position-buffer-beginning."
     (let* ((command (car (assoc command (cdr project)))))
       (unless command
         (error "Unknown command \"%s\"" command))
-      (custode--set-command-option (car project) command :positioning-function positioning-function)
+      (custode--set-command-option command :positioning-function positioning-function)
       (custode-autosave)
       (message "Set positioning function for \"%s\"" command))))
 
@@ -364,7 +364,7 @@ Triggers running enabled commands if the file is in a project."
   "Get the state key of COMMAND in PROJECT-ROOT."
   (concat project-root "\0" command))
 
-(defun custode--set-command-option (project-root command option value)
+(defun custode--set-command-option (command option value)
   "Set OPTION to VALUE for COMMAND in PROJECT-ROOT."
   (custode-with-current-project
     (let* ((command (assoc command (cdr project))))
@@ -374,7 +374,7 @@ Triggers running enabled commands if the file is in a project."
           (setf (cdr (assoc option (cdr command))) value)
         (push (cons option value) (cdr command))))))
 
-(defun custode--get-command-option (project-root command option)
+(defun custode--get-command-option (command option)
   "Get OPTION for COMMAND in PROJECT-ROOT."
   (custode-with-current-project
     (let* ((command (assoc command (cdr project))))
@@ -519,7 +519,7 @@ regardless of whether they're enabled or not."
       (custode--start project-root
                       command
                       (custode--get-command-state project-root command :args)
-                      (custode--get-command-option project-root command :positioning-function)))))
+                      (custode--get-command-option command :positioning-function)))))
 
 (defun custode--start (project-root command &optional args position-function)
   "Start COMMAND in PROJECT-ROOT, optionally with ARGS arguments.
