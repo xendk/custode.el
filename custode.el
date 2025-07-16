@@ -126,6 +126,15 @@ These functions are called with the buffer as the only argument"
   '((t :inherit completions-common-part))
   "Face used to highlight command arguments in completion.")
 
+(defmacro custode-with-current-project (&rest body)
+  "Evaluate BODY with current project as PROJECT.
+
+A project is a list where the car is the project root and the cdr is the
+commands."
+  (declare (indent 0) (debug t))
+  `(let* ((project (custode--get-project (custode--current-project-root))))
+     (progn ,@body)))
+
 (defun custode-buffer-name (project-root command)
   "Get the buffer name for the COMMAND in PROJECT-ROOT project."
   (concat " *custode " project-root " " command "*"))
@@ -136,11 +145,10 @@ These functions are called with the buffer as the only argument"
 After adding a command, use `custode-watch' to continuously run
 it."
   (interactive "sCommand: ")
-  (let ((project-root (custode--current-project-root)))
-    (let ((project (custode--get-project project-root)))
-      (push (cons command '()) (cdr project))
-      (custode-autosave)
-      (message "Created \"%s\"" command))))
+  (custode-with-current-project
+    (push (cons command '()) (cdr project))
+    (custode-autosave)
+    (message "Created \"%s\"" command)))
 
 (defun custode-edit-command (command new-command)
   "Edit COMMAND to NEW-COMMAND.
@@ -153,33 +161,34 @@ Changes the command and carries state over."
       (read-string "New command: "
                    command
                    'custode-command-history))))
-  (let* ((project-root (custode--current-project-root))
-         (project (custode--get-project project-root))
-         (old-state-key (custode--commmand-state-key project-root command))
-         (new-state-key (custode--commmand-state-key project-root new-command)))
-    (setcar (assoc command (cdr project)) new-command)
-    ;; Move state over.
-    (when (assoc old-state-key custode--command-states)
-      (setcar (assoc old-state-key custode--command-states) new-state-key))
-    (when (and (custode--command-watching-p project-root new-command)
-               (called-interactively-p 'any)
-               (not current-prefix-arg))
-      (kill-buffer (custode-buffer-name project-root command))
-      (custode--trigger project-root (list new-command)))
-    (custode-autosave)
-    (message "Changed command")))
+  (custode-with-current-project
+    (let* ((project-root (car project))
+           (old-state-key (custode--commmand-state-key project-root command))
+           (new-state-key (custode--commmand-state-key project-root new-command)))
+      (setcar (assoc command (cdr project)) new-command)
+      ;; Move state over.
+      (when (assoc old-state-key custode--command-states)
+        (setcar (assoc old-state-key custode--command-states) new-state-key))
+      (when (and (custode--command-watching-p project-root new-command)
+                 (called-interactively-p 'any)
+                 (not current-prefix-arg))
+        (kill-buffer (custode-buffer-name project-root command))
+        (custode--trigger project-root (list new-command)))
+      (custode-autosave)
+      (message "Changed command"))))
 
 (defun custode-delete-command (command)
   "Delete COMMAND from the current project."
   (interactive
    (list
     (custode--completing-read-command "Delete command")))
-  (if (yes-or-no-p (format "Really delete \"%s\"? " command))
-      (let* ((project (custode--get-project (custode--current-project-root))))
-        (setcdr project (assoc-delete-all command (cdr project)))
-        (custode-autosave)
-        (message "Deleted \"%s\"" command))
-    (message "Command not deleted")))
+  (custode-with-current-project
+    (if (yes-or-no-p (format "Really delete \"%s\"? " command))
+        (progn
+          (setcdr project (assoc-delete-all command (cdr project)))
+          (custode-autosave)
+          (message "Deleted \"%s\"" command))
+      (message "Command not deleted"))))
 
 (defun custode-watch (command)
   "Watch COMMAND in the current project.
@@ -215,9 +224,8 @@ prefix argument."
 (defun custode-load ()
   "Load project commands from `custode-save-file' file in project root."
   (interactive)
-  (let ((project-root (custode--current-project-root)))
-    (setcdr (custode--get-project project-root)
-            (custode--read-project-commands project-root))
+  (custode-with-current-project
+    (setcdr project (custode--read-project-commands (car project)))
     (message "Loaded project commands.")))
 
 (defun custode-save ()
@@ -241,14 +249,13 @@ custode--position-buffer-beginning."
   (unless (member positioning-function custode-buffer-positioning-functions)
     (error "Unknown positioning function %s" positioning-function))
 
-  (let* ((project-root (custode--current-project-root))
-         (project-commands (cdr (custode--get-project project-root))                           )
-         (command (car (assoc command project-commands))))
-    (unless command
-      (error "Unknown command \"%s\"" command))
-    (custode--set-command-option project-root command :positioning-function positioning-function)
-    (custode-autosave)
-    (message "Set positioning function for \"%s\"" command)))
+  (custode-with-current-project
+    (let* ((command (car (assoc command (cdr project)))))
+      (unless command
+        (error "Unknown command \"%s\"" command))
+      (custode--set-command-option (car project) command :positioning-function positioning-function)
+      (custode-autosave)
+      (message "Set positioning function for \"%s\"" command))))
 
 (defun custode-set-command-args (command args)
   "Set/unset command arguments for COMMAND in the current project.
@@ -360,21 +367,21 @@ Triggers running enabled commands if the file is in a project."
 
 (defun custode--set-command-option (project-root command option value)
   "Set OPTION to VALUE for COMMAND in PROJECT-ROOT."
-  (let* ((project-commands (cdr (custode--get-project project-root)))
-         (command (assoc command project-commands)))
-    (unless command
-      (error "Unknown command \"%s\"" command))
-    (if (assoc option (cdr command))
-        (setf (cdr (assoc option (cdr command))) value)
-      (push (cons option value) (cdr command)))))
+  (custode-with-current-project
+    (let* ((command (assoc command (cdr project))))
+      (unless command
+        (error "Unknown command \"%s\"" command))
+      (if (assoc option (cdr command))
+          (setf (cdr (assoc option (cdr command))) value)
+        (push (cons option value) (cdr command))))))
 
 (defun custode--get-command-option (project-root command option)
   "Get OPTION for COMMAND in PROJECT-ROOT."
-  (let* ((project-commands (cdr (custode--get-project project-root)))
-         (command (assoc command project-commands)))
-    (unless command
-      (error "Unknown command \"%s\"" command))
-    (cdr (assoc option (cdr command)))))
+  (custode-with-current-project
+    (let* ((command (assoc command (cdr project))))
+      (unless command
+        (error "Unknown command \"%s\"" command))
+      (cdr (assoc option (cdr command))))))
 
 (defun custode--get-command-state (project-root command)
   "Return COMMAND state for PROJECT-ROOT.
@@ -420,20 +427,20 @@ Returns (PROJECT-ROOT . COMMANDS)."
 
 (defun custode--get-current-project-commands ()
   "Get commands of current project."
-  (let ((project-root (custode--current-project-root)))
-    (cdr (custode--get-project project-root))))
+  (custode-with-current-project
+    (cdr project)))
 
 (defun custode--set-command-watching (project-root command state)
   "Set COMMAND watching state.
 
 PROJECT-ROOT is the project root and STATE is t or nil."
-  (let* ((commands (cdr (custode--get-project project-root)))
-         (command-state (custode--get-command-state project-root command)))
-    (or (assoc command commands)
-        (error "Unknown command \"%s\"" command))
-    (if (assoc :watching (cdr command-state))
-        (setf (cdr (assoc :watching (cdr command-state))) state)
-      (push (cons :watching state) (cdr command-state)))))
+  (custode-with-current-project
+    (let* ((command-state (custode--get-command-state project-root command)))
+      (or (assoc command (cdr project))
+          (error "Unknown command \"%s\"" command))
+      (if (assoc :watching (cdr command-state))
+          (setf (cdr (assoc :watching (cdr command-state))) state)
+        (push (cons :watching state) (cdr command-state))))))
 
 (defun custode--command-watching-p (project-root command)
   "Check whether the COMMAND in PROJECT-ROOT is watching."
@@ -480,17 +487,16 @@ STR, PRED and FLAG is defined by the completion system."
   "Affixation function to decorate COMPLETIONS.
 
 Adds a checkmark to watched commands and the current arguments."
-  (mapcar (lambda (c)
-            (let* ((project-root (custode--current-project-root))
-                   (commands (cdr (custode--get-project project-root)))
-                   (command (car (assoc c commands)))
-                   (args (custode--get-command-args project-root c)))
-              (list c
-                    (if (custode--command-watching-p project-root command)
-                        "✓ " "  ")
-                    (when args
-                      (propertize (concat " " args) 'face 'custode-completions-args)))))
-          completions))
+  (custode-with-current-project
+    (mapcar (lambda (c)
+              (let* ((command (car (assoc c (cdr project))))
+                     (args (custode--get-command-args (car project) c)))
+                (list c
+                      (if (custode--command-watching-p (car project) command)
+                          "✓ " "  ")
+                      (when args
+                        (propertize (concat " " args) 'face 'custode-completions-args)))))
+            completions)))
 
 (defun custode--trigger (project-root &optional commands)
   "Trigger commands on PROJECT-ROOT.
