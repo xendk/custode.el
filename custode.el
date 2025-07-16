@@ -243,8 +243,7 @@ custode--position-buffer-beginning."
     (error "Unknown positioning function %s" positioning-function))
 
   (let* ((project-root (custode--current-project-root))
-         (project-commands (or (cdr (custode--get-project project-root))
-                               (error "Unknown project %s" project-root)))
+         (project-commands (cdr (custode--get-project project-root))                           )
          (command (car (assoc command project-commands))))
     (unless command
       (error "Unknown command \"%s\"" command))
@@ -362,8 +361,7 @@ Triggers running enabled commands if the file is in a project."
 
 (defun custode--set-command-option (project-root command option value)
   "Set OPTION to VALUE for COMMAND in PROJECT-ROOT."
-  (let* ((project-commands (or (cdr (custode--get-project project-root))
-                               (error "Unknown project %s" project-root)))
+  (let* ((project-commands (cdr (custode--get-project project-root)))
          (command (assoc command project-commands)))
     (unless command
       (error "Unknown command \"%s\"" command))
@@ -373,8 +371,7 @@ Triggers running enabled commands if the file is in a project."
 
 (defun custode--get-command-option (project-root command option)
   "Get OPTION for COMMAND in PROJECT-ROOT."
-  (let* ((project-commands (or (cdr (custode--get-project project-root))
-                               (error "Unknown project %s" project-root)))
+  (let* ((project-commands (cdr (custode--get-project project-root)))
          (command (assoc command project-commands)))
     (unless command
       (error "Unknown command \"%s\"" command))
@@ -431,8 +428,7 @@ Returns (PROJECT-ROOT . COMMANDS)."
   "Set COMMAND watching state.
 
 PROJECT-ROOT is the project root and STATE is t or nil."
-  (let* ((commands (or (cdr (custode--get-project project-root))
-                       (error "Unknown project %s" project-root)))
+  (let* ((commands (cdr (custode--get-project project-root)))
          (command-state (custode--get-command-state project-root command)))
     (or (assoc command commands)
         (error "Unknown command \"%s\"" command))
