@@ -31,7 +31,6 @@
 ;; - Add debounce so that opening magit with many unsaved files
 ;;   doesn't re-run the command many times in a row.
 ;; - Rewrite UI to use transient.
-;; - Don't use `called-interactively-p' (see it's doc)
 
 ;;; Code:
 
@@ -164,7 +163,7 @@ Changes the command and carries state over."
     (when (assoc old-state-key custode--command-states)
       (setcar (assoc old-state-key custode--command-states) new-state-key))
     (when (and (custode--command-watching-p project-root new-command)
-               (called-interactively-p)
+               (called-interactively-p 'any)
                (not current-prefix-arg))
       (kill-buffer (custode-buffer-name project-root command))
       (custode--trigger project-root (list new-command)))
@@ -197,7 +196,7 @@ a prefix argument."
     (custode--completing-read-command "Watch")))
   (let ((project-root (custode--current-project-root)))
     (custode--set-command-watching project-root command t)
-    (when (and (called-interactively-p) (not current-prefix-arg))
+    (when (and (called-interactively-p 'any) (not current-prefix-arg))
       (custode--trigger project-root (list command)))
     (message "Watching \"%s\"" command)))
 
@@ -211,7 +210,7 @@ prefix argument."
     (custode--completing-read-command "Unwatch")))
   (let ((project-root (custode--current-project-root)))
     (custode--set-command-watching project-root command nil)
-    (when (and (called-interactively-p) (not current-prefix-arg))
+    (when (and (called-interactively-p 'any) (not current-prefix-arg))
       (kill-buffer (custode-buffer-name project-root command)))
     (message "Stopped watching \"%s\"" command)))
 
@@ -282,7 +281,7 @@ Command arguments persists for the duration of the Emacs session."
     (if (equal args "")
         (setf (cdr state) (assoc-delete-all :args (cdr state)))
       (push (cons :args args) (cdr state)))
-    (when (and (called-interactively-p)
+    (when (and (called-interactively-p 'any)
                (not current-prefix-arg)
                (custode--command-watching-p project-root command))
       (custode--trigger project-root (list command)))))
