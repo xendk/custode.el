@@ -277,7 +277,7 @@ Command arguments persists for the duration of the Emacs session."
      (list
       command
       (read-string "Command arguments: "
-                   (custode--get-command-args (custode--current-project-root) command)
+                   (custode--get-command-state (custode--current-project-root) command :args)
                    'custode-args-history))))
   (let* ((args (string-trim args))
          (project-root (custode--current-project-root)))
@@ -473,10 +473,6 @@ Returns a list of commands."
             (push (car command) watching))))
     watching))
 
-(defun custode--get-command-args (project-root command)
-  "Get the currently set arguments for the PROJECT-ROOT COMMAND."
-  (custode--get-command-state project-root command :args))
-
 (defun custode--completing-read-command (prompt)
   "Use `completing-read' to read a command in the current project.
 
@@ -503,7 +499,7 @@ Adds a checkmark to watched commands and the current arguments."
   (custode-with-current-project
     (mapcar (lambda (c)
               (let* ((command (car (assoc c (cdr project))))
-                     (args (custode--get-command-args (car project) c)))
+                     (args (custode--get-command-state (car project) c :args)))
                 (list c
                       (if (custode--command-watching-p (car project) command)
                           "✓ " "  ")
@@ -520,7 +516,7 @@ regardless of whether they're enabled or not."
         (default-directory project-root))
     (dolist (command commands)
       (let* ((positioning-function (custode--get-command-option project-root command :positioning-function))
-             (args (custode--get-command-args project-root command)))
+             (args (custode--get-command-state project-root command :args)))
         (custode--start project-root command args positioning-function)))))
 
 (defun custode--start (project-root command &optional args position-function)

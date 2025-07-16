@@ -238,17 +238,4 @@
         (custode-set-command-args "task" "")
         (expect custode--command-states
                 :to-have-same-items-as
-                '())))
-
-    (describe "custode--get-command-args"
-      (it "returns nil when no args is set"
-        (expect (custode--get-command-args "project" "task")
-                :to-equal
-                nil))
-
-      (it "returns the currently set args"
-        (custode-set-command-args "task" "command args")
-        (expect (custode--get-command-args "project" "task")
-                :to-equal
-                "command args")
-        ))))
+                '())))))
