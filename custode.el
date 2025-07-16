@@ -175,8 +175,7 @@ Changes the command and carries state over."
    (list
     (custode--completing-read-command "Delete command")))
   (if (yes-or-no-p (format "Really delete \"%s\"? " command))
-      (let* ((project-root (custode--current-project-root))
-             (project (custode--get-project project-root)))
+      (let* ((project (custode--get-project (custode--current-project-root))))
         (setcdr project (assoc-delete-all command (cdr project)))
         (custode-autosave)
         (message "Deleted \"%s\"" command))
