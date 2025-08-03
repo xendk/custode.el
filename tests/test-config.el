@@ -82,7 +82,7 @@ Different versions of Emacs renders the Lisp structures a bit differently."
 
     (it "deletes the file if no commands"
       (assess-with-filesystem
-       (list (list custode-save-file ";;; -*- lisp-data -*-
+       `((,custode-save-file ";;; -*- lisp-data -*-
 ((\"task1\")
  (\"task2\"
   (:positioning-function . custode--position-buffer-end))
@@ -123,7 +123,7 @@ Different versions of Emacs renders the Lisp structures a bit differently."
 
     (it "reads file in old format"
       (assess-with-filesystem
-       (list (list custode-save-file ";;; -*- lisp-data -*-
+       `((,custode-save-file ";;; -*- lisp-data -*-
 ((\"task1\"
   (:task . \"task one\"))
  (\"task2\"
