@@ -81,10 +81,11 @@ The format is:
   '(:eval
     (when (and custode-mode
                (custode--get-current-project-commands))
-      (let* ((running (custode--get-project-state (custode--current-project-root) :running)))
-        (if (and (numberp running) (> running 0))
-            (propertize " 👁" 'face 'compilation-mode-line-run)
-          " 👁"))))
+      (ignore-errors
+        (let* ((running (custode--get-project-state (custode--current-project-root) :running)))
+          (if (and (numberp running) (> running 0))
+              (propertize " 👁" 'face 'compilation-mode-line-run)
+            " 👁")))))
   "Mode line lighter for Custode.
 
 The value of this variable is a mode line template as in
