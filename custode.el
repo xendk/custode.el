@@ -79,9 +79,9 @@ The format is:
 
 (defvar custode-lighter
   '(:eval
-    (when (and custode-mode
-               (custode--get-current-project-commands))
-      (ignore-errors
+    (ignore-errors
+      (when (and custode-mode
+                 (custode--get-current-project-commands))
         (let* ((running (custode--get-project-state (custode--current-project-root) :running)))
           (if (and (numberp running) (> running 0))
               (propertize " 👁" 'face 'compilation-mode-line-run)
