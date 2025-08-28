@@ -34,9 +34,9 @@ Different versions of Emacs renders the Lisp structures a bit differently."
     (it "writes the file"
       (assess-with-filesystem
        '()
-       (setq commands '(("task1" . ())
-                        ("task2" . ((:positioning-function . custode--position-buffer-end)))))
-       (custode--write-project-commands default-directory commands)
+       (let ((commands '(("task1" . ())
+                         ("task2" . ((:positioning-function . custode--position-buffer-end))))))
+         (custode--write-project-commands default-directory commands))
 
        (expect (whitespace-normalize (assess-file (concat (file-name-as-directory default-directory) custode-save-file)))
                :to-equal
@@ -49,11 +49,11 @@ Different versions of Emacs renders the Lisp structures a bit differently."
     (it "writes the file in consistent order"
       (assess-with-filesystem
        '()
-       (setq commands '(("task4" . ())
-                        ("task1" . ())
-                        ("task3" . ())
-                        ("task2" . ())))
-       (custode--write-project-commands default-directory commands)
+       (let ((commands '(("task4" . ())
+                         ("task1" . ())
+                         ("task3" . ())
+                         ("task2" . ()))))
+         (custode--write-project-commands default-directory commands))
 
        (expect (whitespace-normalize (assess-file (concat (file-name-as-directory default-directory) custode-save-file)))
                :to-equal
@@ -64,11 +64,11 @@ Different versions of Emacs renders the Lisp structures a bit differently."
  (\"task4\"))
 "))
 
-       (setq commands '(("task" . ((:omega . "omega")
-                                   (:beta . "beta")
-                                   (:alpha . "alpha")
-                                   (:gamma . "gamma")))))
-       (custode--write-project-commands default-directory commands)
+       (let ((commands '(("task" . ((:omega . "omega")
+                                    (:beta . "beta")
+                                    (:alpha . "alpha")
+                                    (:gamma . "gamma"))))))
+         (custode--write-project-commands default-directory commands))
 
        (expect (whitespace-normalize (assess-file (concat (file-name-as-directory default-directory) custode-save-file)))
                :to-equal
@@ -89,8 +89,8 @@ Different versions of Emacs renders the Lisp structures a bit differently."
  (\"task3\"
   (:invalid . \"task three\")))
 "))
-       (setq commands '())
-       (custode--write-project-commands default-directory commands)
+       (let ((commands '()))
+         (custode--write-project-commands default-directory commands))
 
        (expect (file-exists-p (concat (file-name-as-directory default-directory) custode-save-file))
                :to-equal
@@ -99,8 +99,8 @@ Different versions of Emacs renders the Lisp structures a bit differently."
     (it "quietly handles if the file doesn't exist"
         (assess-with-filesystem
          '()
-         (setq commands '())
-         (custode--write-project-commands default-directory commands)
+         (let ((commands '()))
+           (custode--write-project-commands default-directory commands))
 
          (expect (file-exists-p (concat (file-name-as-directory default-directory) custode-save-file))
                  :to-equal
