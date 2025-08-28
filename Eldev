@@ -5,6 +5,10 @@
 ;(eldev-use-package-archive 'nongnu-elpa)
 (eldev-use-package-archive 'melpa)
 
-(eldev-use-plugin 'undercover)
 (eldev-use-plugin 'autoloads)
+(eldev-use-plugin 'undercover)
 (eldev-add-extra-dependencies 'test 'assess 'compat 'shut-up)
+
+;; Make checkdoc not require double space after period.
+(setq sentence-end-double-space nil)
+(setq eldev-undercover-config '(auto codecov dontsend))
