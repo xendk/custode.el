@@ -1,11 +1,13 @@
 ;;; custode.el --- File watching with an Emacs twist  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  Thomas Fini Hansen
+;; Copyright (C) 2024-2025  Thomas Fini Hansen
 
 ;; Author: Thomas Fini Hansen <xen@xen.dk>
 ;; Keywords: tools
-;; Package-Requires: ((emacs "28"))
+;; Package-Requires: ((emacs "28.1"))
 ;; Package-Version: 0.0.1
+;; Keywords: tools, processes
+;; URL: https://github.com/xendk/custode.el
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
