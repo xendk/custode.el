@@ -25,7 +25,7 @@
         ;; This is what you have for mocking internals of another
         ;; package.
         (spy-on 'project-current :and-return-value
-                (if (version< emacs-version "30.0.0")
+                (if (version< emacs-version "29.0.0")
                     '(vc . "/some/path/")
                   '(vc Git "/some/path/"))))
       (it "returns the path"
