@@ -31,15 +31,15 @@
     (it "should move state to the new command"
       (spy-on 'custode--current-project-root :and-return-value "test")
       (shut-up (custode-add-command "the command"))
-      (setq command-state (custode--current-command-state "test" "the command"))
-      (push (cons :running 1) (cdr command-state))
-      (expect custode--command-states
-              :to-have-same-items-as
-              '(("test\0the command" . ((:running . 1)))))
-      (shut-up (custode-edit-command "the command" "new command"))
-      (expect custode--command-states
-              :to-have-same-items-as
-              '(("test\0new command" . ((:running . 1)))))))
+      (let ((command-state (custode--current-command-state "test" "the command")))
+        (push (cons :running 1) (cdr command-state))
+        (expect custode--command-states
+                :to-have-same-items-as
+                '(("test\0the command" . ((:running . 1)))))
+        (shut-up (custode-edit-command "the command" "new command"))
+        (expect custode--command-states
+                :to-have-same-items-as
+                '(("test\0new command" . ((:running . 1))))))))
 
   (describe "custode--current-command-state"
     (it "creates new command states"
@@ -53,15 +53,15 @@
     (it "allows for modifying command states"
       ;; Unrelated task.
       (custode--current-command-state "test" "task2")
-      (setq command-state (custode--current-command-state "test" "task"))
-      (push (cons :enabled t) (cdr command-state))
-      (expect (custode--current-command-state "test" "task")
-              :to-equal
-              '("test\0task" . ((:enabled . t))))
-      (expect custode--command-states
-              :to-have-same-items-as
-              '(("test\0task" . ((:enabled . t)))
-                ("test\0task2" . ())))))
+      (let ((command-state (custode--current-command-state "test" "task")))
+        (push (cons :enabled t) (cdr command-state))
+        (expect (custode--current-command-state "test" "task")
+                :to-equal
+                '("test\0task" . ((:enabled . t))))
+        (expect custode--command-states
+                :to-have-same-items-as
+                '(("test\0task" . ((:enabled . t)))
+                  ("test\0task2" . ()))))))
 
 
   (describe "custode--set-command-state"
