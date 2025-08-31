@@ -164,7 +164,7 @@
       ;; from lisp.
       (it "errors on unknown command"
         (spy-on 'custode--current-project-root :and-return-value "project")
-        (expect (custode-watch "project" "taskx")
+        (expect (custode-watch "taskx")
                 :to-throw))
 
       (it "triggers command when called interactively"
