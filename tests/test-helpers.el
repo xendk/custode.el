@@ -1,7 +1,6 @@
+;;; -*- lexical-binding: t; -*-
 ;; For match-buffers.
-(when (version< emacs-version "30.0.0")
-  ;; Can't remember why I needed this.
-  (require 'compat-29))
+(require 'compat)
 
 (defun wait-for-custode-commands (&optional delay)
   "Wait for custode commands to finish."
