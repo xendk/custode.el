@@ -76,7 +76,8 @@
       (shut-up (custode-add-command "the command")))
 
     (it "should replace command in current project"
-      (shut-up (custode-edit-command "the command" "new command"))
+      (with-simulated-input ((insert "the command") "RET C-a C-k" (insert "new command") "RET")
+        (shut-up (call-interactively #'custode-edit-command)))
       (expect (cdr (assoc "the-project/" custode--commands))
               :to-have-same-items-as
               '(("new command")))))
@@ -88,7 +89,8 @@
       (shut-up (custode-add-command "the command")))
 
     (it "should remove commands from current project"
-      (shut-up (custode-delete-command "the command"))
+      (with-simulated-input ((insert "the command") "RET")
+        (shut-up (call-interactively #'custode-delete-command)))
       (expect (cdr (assoc "the-project/" custode--commands))
               :to-have-same-items-as
               '())))
@@ -111,7 +113,9 @@
       (shut-up (custode-add-command "the command")))
 
     (it "sets the buffer positioning"
-      (custode-set-buffer-positioning "the command" 'custode--position-buffer-end)
+      (with-simulated-input ((insert "the command") "RET" "custode--position-buffer-end" "RET")
+        (call-interactively #'custode-set-buffer-positioning)
+        )
       (expect (cdr (assoc "the command" (cdr (assoc "the-project/" custode--commands))))
               :to-have-same-items-as
               '((:positioning-function . custode--position-buffer-end))))
@@ -119,5 +123,4 @@
     ;; Can only happen when called from Lisp.
     (it "errors on invalid positioning"
       (expect (custode-set-buffer-positioning "the command" 'banana)
-              :to-throw 'error)))
-  )
+              :to-throw 'error))))

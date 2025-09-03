@@ -7,7 +7,7 @@
 
 (eldev-use-plugin 'autoloads)
 (eldev-use-plugin 'undercover)
-(eldev-add-extra-dependencies 'test 'assess 'compat 'shut-up)
+(eldev-add-extra-dependencies 'test 'assess 'compat 'shut-up 'with-simulated-input)
 
 ;; Make checkdoc not require double space after period.
 (setq sentence-end-double-space nil)

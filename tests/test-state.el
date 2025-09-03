@@ -227,13 +227,16 @@
 
     (describe "custode-set-command-args"
       (it "sets args state"
-        (custode-set-command-args "task" "command args")
+        (with-simulated-input ("task" "RET" (insert "command args") "RET")
+          (call-interactively #'custode-set-command-args))
         (expect custode--command-states
                 :to-have-same-items-as
                 '(("project\0task" . ((:args . "command args"))))))
       (it "unsets args state on empty arg"
-        (custode-set-command-args "task" "command args")
-        (custode-set-command-args "task" "")
+        (with-simulated-input ("task" "RET" (insert "command args") "RET"
+                               "task" "RET C-a C-k RET")
+          (call-interactively #'custode-set-command-args)
+          (call-interactively #'custode-set-command-args))
         (expect custode--command-states
                 :to-have-same-items-as
                 nil)))))
