@@ -1,5 +1,8 @@
 # Custode
 
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/xendk/custode.el/test.yml?branch=main&style=for-the-badge)](https://github.com/xendk/custode.el/actions?query=branch%3Amain)
+[![Codecov](https://img.shields.io/codecov/c/github/xendk/custode.el?style=for-the-badge)](https://app.codecov.io/gh/xendk/custode.el)
+
 Custode is a "file watcher" for Emacs that runs commands in the
 background, and only pops up when a command fails.
 
